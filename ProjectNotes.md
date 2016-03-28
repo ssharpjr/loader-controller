@@ -41,7 +41,7 @@ Use a mini computer (MPC), a barcode scanner, and an AC power interrupter to con
 # Software Logic and Notes:
 - The MPC will prompt the user to scan the workorder barcode.
 - The MPC will capture the workorder number from the barcode scanner.
-- The MPC will send the workorder number in the form of a JSON (querystring?) request to the web service.
+- The MPC will send the workorder number in the form of a JSON request to the web service.
 - The Web Service (Flask?) running on a VM server will query the database.
 - The web service will reply with the RM item number.
 - The MPC will compare the Work Center ID to the Press it is currently assigned.
@@ -51,3 +51,9 @@ Use a mini computer (MPC), a barcode scanner, and an AC power interrupter to con
 - The MPC will prompt the user to scan the raw material barcode.
 - The MPC compares the stored information the scanned information.
 - If it matches the loader control PIN will go HIGH.
+
+##### Web Service Notes:
+- Flask (flask-restless, flask-sqlalchemy, sqlacodegen) to query Oracle and return JSON.
+
+##### MPC Client Notes:
+- Python to read JSON into variables.
