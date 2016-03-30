@@ -16,7 +16,6 @@ Base = declarative_base(engine)
 
 
 class Arinvt(Base):
-    """"""
     __tablename__ = 'arinvt'
 
     id = Column(NUMBER, primary_key=True)
@@ -48,7 +47,7 @@ def loadSession():
 
 if __name__ == "__main__":
     session = loadSession()
-    wo_id = '9934386'
+    wo_id = '9934386'  # testing.  Will be captured later
     for eqno, itemno in session.query(V_RT_Workorders, Arinvt).\
             filter(V_RT_Workorders.standard_id == Standard.id).\
             filter(Standard.arinvt_id_mat == Arinvt.id).\
