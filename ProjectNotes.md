@@ -32,7 +32,7 @@ Use a mini computer (MPC), a barcode scanner, and an AC power interrupter to con
 
 ##### Parts List:
 - Raspberry Pi 2 (MPC)
-- Barcode scanner, USB wired
+- Barcode scanner, USB wired (Use the manual to program the scanner to suffix an <ENTER> [page 13-5])
 - PowerSwitch Tail II, isolated DC actuated AC power switch
 - Non-Invasive Current Sensor (split core current transformer), SF# SEN-11005
 - Analog-to-Digital Converter, MCP3002, SF# COM-08636 (for the CT)

@@ -10,7 +10,7 @@ workorder_id = input("Scan Workorder Number: ")
 # workorder_id = '10014085'
 
 try:
-    con = cx_Oracle.connect('iqms/zeigler17@iqora')
+    con = cx_Oracle.connect('iqms/iqtest@iqtest')
 except Exception as e:
     print(e)
     print("Exiting")
