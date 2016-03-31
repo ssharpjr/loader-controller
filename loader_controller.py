@@ -10,7 +10,7 @@
 
 
 import sys
-import urllib.request
+import requests
 import json
 
 
@@ -25,27 +25,18 @@ def get_wo_scan():
 
 
 def wo_api_request(wo_id):
-
+    url = 'http://localhost:5000/wo/' + wo_id
+    response = requests.get(url=url)
+    data = json.loads(response.text)
     try:
-        url = 'http://localhost:5000/wo/' + wo_id
-        response = urllib.request.urlopen(url)
-        str_response = response.readall().decode('utf-8')
+        if data['error']:
+                print("Invalid Workorder!")
+                run_or_exit_program('run')
     except:
-        response = json.dumps({"error": "Not found"})
-        str_response = response
-
-    obj = json.loads(str_response)
-
-    try:
-        press = obj['press']
-        rmat = obj['rmat']
-        error = ''
-        return press, rmat, error
-    except:
-        press = ''
-        rmat = ''
-        error = obj['error']
-        return press, rmat, error
+        pass
+    press_api = data['press']
+    rmat_api = data['rmat']
+    return press_api, rmat_api
 
 
 def get_rmat_scan():
@@ -61,10 +52,13 @@ def start_loader():
     sys.exit()
 
 
-def exit_program():
-    # print("Exiting")
-    # sys.exit()
-    run()
+def run_or_exit_program(status):
+    if status == 'run':
+        print("Starting over...")
+        run()
+    elif status == 'exit':
+        print("Exiting")
+        sys.exit()
 
 
 def main():
@@ -72,25 +66,22 @@ def main():
     wo_id = get_wo_scan()
 
     # Request the Press and Raw Material Item Number from the API.
-    press, rmat, error = wo_api_request(wo_id)
-    if error:
-        print("Not a valid Workorder!")
-        exit_program()
+    press_api, rmat_api = wo_api_request(wo_id)
 
     # Verify the Press Number.
     print("Checking if workorder is currently running on this press...")
-    if not press == PRESS_ID:
-        print("Workorder is not running on this press!")
-        exit_program()
+    if not press_api == PRESS_ID:
+        print("Incorrect Workorder!")
+        run_or_exit_program('run')
     else:
         print("Good Workorder.  Continuing...")
 
     # Scan the Raw Material barcode.
     rmat_scan = get_rmat_scan()
     print("Checking if raw material matches this workorder...")
-    if not rmat_scan == rmat:
+    if not rmat_scan == rmat_api:
         print("Invalid Material!")
-        exit_program()
+        run_or_exit_program('run')
     else:
         print("Material matches workorder.  Continuing...")
         print("Starting the Loader!")

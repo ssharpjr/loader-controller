@@ -5,7 +5,7 @@
 
 from flask import Flask, abort, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.oracle import CHAR, NUMBER
+from sqlalchemy.dialects.oracle import CHAR, NUMBER, VARCHAR2
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'oracle+cx_oracle://iqms:iqtest@iqtest'
@@ -34,10 +34,11 @@ class Standard(db.Model):
     arinvt_id_mat = db.Column(NUMBER, db.ForeignKey('arinvt.id'))
 
 
-@app.route('/itemtest')
-def index():
-    res = db.session.query(Arinvt).filter(Arinvt.itemno == '103203-FG').first()
-    return jsonify({'ITEMNO': res.itemno, 'DESCRIP': res.descrip})
+class Master_Label(db.Model):
+    __tablename__ = 'master_label'
+    id = db.Column(NUMBER, primary_key=True)
+    serial = db.Column(VARCHAR2)
+    itemno = db.Column(CHAR)
 
 
 @app.route('/wo/<int:wo_id>', methods=['GET'])
@@ -55,6 +56,20 @@ def work_order(wo_id):
                         'rmat': itemno})
     except:
         return jsonify({'error': 'Not found'})
+
+
+@app.route('/serial/<sn>', methods=['GET'])
+def serial_number(sn):
+    res = db.session.query(Master_Label).\
+        filter(Master_Label.serial == sn).\
+        first() or abort(404)
+    itemno = res.itemno.rstrip()
+    return jsonify({'rmat_itemno': itemno})
+    # try:
+    #     itemno = res.itemno.rstrip()
+    #     return jsonify({'itemno': itemno})
+    # except:
+    #     return jsonify({'error': 'Not found'})
 
 
 @app.errorhandler(404)
