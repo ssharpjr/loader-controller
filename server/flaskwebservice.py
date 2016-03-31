@@ -1,4 +1,4 @@
-#!/bin/usr/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # -*- mode: python
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
@@ -47,11 +47,14 @@ def work_order(wo_id):
             filter(Standard.arinvt_id_mat == Arinvt.id).\
             filter(V_RT_Workorders.workorder_id == wo_id).\
             first() or abort(404)
-    eqno = res.V_RT_Workorders.eqno.rstrip()
-    itemno = res.Arinvt.itemno.rstrip()
 
-    return jsonify({'PRESS': eqno,
-                    'RMAT': itemno})
+    try:
+        eqno = res.V_RT_Workorders.eqno.rstrip()
+        itemno = res.Arinvt.itemno.rstrip()
+        return jsonify({'press': eqno,
+                        'rmat': itemno})
+    except:
+        return jsonify({'error': 'Not found'})
 
 
 @app.errorhandler(404)

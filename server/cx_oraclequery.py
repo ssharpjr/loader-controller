@@ -1,5 +1,7 @@
-#!/usr/bin/env/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# -*- mode: python
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 import sys
 import os
