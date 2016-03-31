@@ -14,6 +14,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 
 
+#####################################################################
+
+
 class Arinvt(db.Model):
     __tablename__ = 'arinvt'
     id = db.Column(NUMBER, primary_key=True)
@@ -41,6 +44,9 @@ class Master_Label(db.Model):
     itemno = db.Column(CHAR)
 
 
+#####################################################################
+
+
 @app.route('/wo/<int:wo_id>', methods=['GET'])
 def work_order(wo_id):
     res = db.session.query(V_RT_Workorders, Arinvt).\
@@ -55,7 +61,7 @@ def work_order(wo_id):
         return jsonify({'press': eqno,
                         'rmat': itemno})
     except:
-        return jsonify({'error': 'Not found'})
+        return abort(404)
 
 
 @app.route('/serial/<sn>', methods=['GET'])
@@ -63,13 +69,11 @@ def serial_number(sn):
     res = db.session.query(Master_Label).\
         filter(Master_Label.serial == sn).\
         first() or abort(404)
-    itemno = res.itemno.rstrip()
-    return jsonify({'rmat_itemno': itemno})
-    # try:
-    #     itemno = res.itemno.rstrip()
-    #     return jsonify({'itemno': itemno})
-    # except:
-    #     return jsonify({'error': 'Not found'})
+    try:
+        itemno = res.itemno.rstrip()
+        return jsonify({'itemno': itemno})
+    except:
+        return abort(404)
 
 
 @app.errorhandler(404)
