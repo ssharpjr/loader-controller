@@ -35,9 +35,12 @@ def wo_api_request(wo_id):
                 run_or_exit_program('run')
     except:
         pass
-    press_from_wo = data['press']
-    rmat_from_wo = data['rmat']
-    return press_from_wo, rmat_from_wo
+    try:
+        press_from_wo = data['press']
+        rmat_from_wo = data['rmat']
+        return press_from_wo, rmat_from_wo
+    except:
+        pass
 
 
 def serial_api_request(sn):
@@ -83,6 +86,7 @@ def run_or_exit_program(status):
 
 
 def main():
+    print("This is Press: " + PRESS_ID)
     # Scan the Workorder Number (ID) Barcode.
     wo_id_from_wo = get_wo_scan()
 
@@ -92,9 +96,12 @@ def main():
     # Verify the Press Number.
     print("Checking if workorder is currently running on this press...")
     if press_from_wo == PRESS_ID:
+        print("Match.  Workorder #" + wo_id_from_wo +
+              " is running on Press #" + PRESS_ID)
         print("Good Workorder.  Continuing...")
     else:
         print("Incorrect Workorder!")
+        print("This Workorder is for press: " + press_from_wo)
         run_or_exit_program('run')
 
     # Scan the Raw Material Serial Number Barcode.
