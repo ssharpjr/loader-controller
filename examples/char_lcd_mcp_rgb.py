@@ -1,10 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Example using an RGB character LCD connected to an MCP23017 GPIO extender.
+
+import sys
 import time
 
 import Adafruit_CharLCD as LCD
 import Adafruit_GPIO.MCP230xx as MCP
-import RPi.GPIO as io
+import RPi.GPIO as io  # For standard GPIO methods.
 
 # Define MCP pins connected to the LCD.
 lcd_rs        = 0
@@ -49,6 +52,12 @@ lcd.message('####################')
 # Wait 5 seconds
 time.sleep(5.0)
 
+# End demo here
+# lcd.set_color(0, 0, 0)
+# lcd.enable_display(False)
+# io.cleanup()
+# sys.exit()
+
 # Demo showing the cursor.
 lcd.clear()
 lcd.show_cursor(True)
@@ -84,37 +93,37 @@ lcd.message('And now for some \n     RGB \n        colors!')
 time.sleep(3.0)
 lcd.set_color(1.0, 0.0, 0.0)  # Red
 lcd.clear()
-lcd.message('RED')
+lcd.message('R E D')
 time.sleep(3.0)
 
 lcd.set_color(0.0, 1.0, 0.0)  # Green
 lcd.clear()
-lcd.message('GREEN')
+lcd.message('G R E E N')
 time.sleep(3.0)
 
 lcd.set_color(0.0, 0.0, 1.0)  # Blue
 lcd.clear()
-lcd.message('BLUE')
+lcd.message('B L U E')
 time.sleep(3.0)
 
 lcd.set_color(1.0, 1.0, 0.0)  # Yellow
 lcd.clear()
-lcd.message('YELLOW')
+lcd.message('Y E L L O W')
 time.sleep(3.0)
 
 lcd.set_color(0.0, 1.0, 1.0)  # Cyan
 lcd.clear()
-lcd.message('CYAN')
+lcd.message('C Y A N')
 time.sleep(3.0)
 
 lcd.set_color(1.0, 0.0, 1.0)  # Magenta
 lcd.clear()
-lcd.message('MAGENTA')
+lcd.message('M A G E N T A')
 time.sleep(3.0)
 
 lcd.set_color(1.0, 1.0, 1.0)  # White
 lcd.clear()
-lcd.message('WHITE')
+lcd.message('W H I T E')
 time.sleep(3.0)
 
 # Demo turning backlight off and on.
@@ -129,10 +138,11 @@ lcd.clear()
 lcd.message('Goodbye!')
 # Turn backlight on.
 lcd.set_backlight(1)
-time.sleep(1.0)
+time.sleep(2.0)
 # Power down LCD
 lcd.clear()
 lcd.set_color(0.0, 0.0, 0.0)
 lcd.set_backlight(0)
+lcd.enable_display(False)
 io.cleanup()
 
