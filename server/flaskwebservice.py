@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# -*- mode: python
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 from flask import Flask, abort, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
