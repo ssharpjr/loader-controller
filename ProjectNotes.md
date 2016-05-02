@@ -6,7 +6,7 @@ Prevent the material loader from loading the wrong material based on Barcode sca
 
 
 # Solution:
-Use a mini computer (MPC), a barcode scanner, and an AC power interrupter to control the material loader.
+Use a mini computer (MPC), a barcode scanner, and aPowertail Switch II to control the material loader.
 
 
 # Steps:
@@ -21,9 +21,10 @@ Use a mini computer (MPC), a barcode scanner, and an AC power interrupter to con
 
 # Hardware Parts List and Notes:
 ##### Loader Power Control:
-- AC power is controlled by a Powertail II device.  A signal from the MPC will trigger the PT2 on whan all logic passes.
-- A non-invasive current sensor (split core Current Transformer [CT]) will detect the presence of AC power coming out of the PT2.  It will know when the loader is unplugged (or power is lost through the PT2).
-    + If the MPC signal is HIGH and the CT signal goes low, turn off the MPC signal, turning off the loader.
+- AC power is controlled by a Powertail Switch II (PTS) device.  A signal from the MPC will trigger the PTS on when all logic passes.
+- ~~A non-invasive current sensor (split core Current Transformer [CT]) will detect the presence of AC power coming out of the PTS.  It will know when the loader is unplugged (or power is lost through the PTS).~~  This will not work because the loader is not constantly on.  It turns on when more material is required.
+- A 3.3V (or 5V leveled to 3.3V) power adapter will be plugged into the output of the PTS.  The 3.3VDC output is sent to the MPC to determine the state of the AC output loadline on the PTS.
+    + If the MPC signal is HIGH and the power adapter signal goes low, turn off the MPC signal, turning off the loader and resetting the whole process.
 
 ##### LCD Feedback:
 - Keep the user informed of the current state of the loader (running/stopped) and the current step in the validation process.
@@ -33,9 +34,10 @@ Use a mini computer (MPC), a barcode scanner, and an AC power interrupter to con
 ##### Parts List:
 - Raspberry Pi 2 (MPC)
 - Barcode scanner, USB wired (Use the manual to program the scanner to suffix an <ENTER> [page 13-5])
-- PowerSwitch Tail II, isolated DC actuated AC power switch
-- Non-Invasive Current Sensor (split core current transformer), SF# SEN-11005
-- Analog-to-Digital Converter, MCP3002, SF# COM-08636 (for the CT)
+- Powertail Switch II, isolated DC actuated AC power switch
+- 3.3VDC power adapter and divider circuit (2-10K resistors)
+- ~~Non-Invasive Current Sensor (split core current transformer), SF# SEN-11005~~
+- ~~Analog-to-Digital Converter, MCP3002, SF# COM-08636 (for the CT)~~
 
 
 # Software Logic and Notes:

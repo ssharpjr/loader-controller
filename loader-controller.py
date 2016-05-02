@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# -*- mode: python
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 # TODO: Setup LCD
 # TODO: Setup Loader Controller

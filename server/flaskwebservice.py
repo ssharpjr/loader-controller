@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# -*- mode: python
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 from flask import Flask, abort, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
@@ -50,10 +48,10 @@ class Master_Label(db.Model):
 @app.route('/wo/<int:wo_id>', methods=['GET'])
 def work_order(wo_id):
     res = db.session.query(V_RT_Workorders, Arinvt).\
-            filter(V_RT_Workorders.standard_id == Standard.id).\
-            filter(Standard.arinvt_id_mat == Arinvt.id).\
-            filter(V_RT_Workorders.workorder_id == wo_id).\
-            first() or abort(404)
+          filter(V_RT_Workorders.standard_id == Standard.id).\
+          filter(Standard.arinvt_id_mat == Arinvt.id).\
+          filter(V_RT_Workorders.workorder_id == wo_id).\
+          first() or abort(404)
 
     try:
         eqno = res.V_RT_Workorders.eqno.rstrip()
