@@ -11,20 +11,32 @@ import json
 
 import Adafruit_CharLCD as LCD
 import Adafruit_GPIO.MCP230xx as MCP
-import RPi.GPIO as io  # For standard GPIO methods.
+import RPi.GPIO as IO  # For standard GPIO methods.
+
 
 # CONSTANTS
+DEBUG = True
 PRESS_ID = '125'  # Should be 125 for test.  This does not change!
 
+
 # Variables
-DEBUG = True
-api_url = 'http://localhost:5000'
+api_url = 'http://localhost:5000'  # Web API URL
+
+
+# GPIO Setup
+ssr_pin = 23  # OUTPUT - Turns on the Solid State Relay
+btn_pin = 24  # INPUT - Reads the outlet cover button
+
+IO.setmode(IO.BCM)
+IO.setup(ssr_pin, IO.OUT, initial=0)
+IO.setup(btn_pin, IO.IN, pull_up_down=IO.PUD_DOWN)
 
 
 ###############################################################################
 # Setup the LCD and MCP.
 ###############################################################################
 # Define the MCP pins connected to the LCD.
+# Note: These are MCP pins, not RPI pins.
 lcd_rs = 0
 lcd_en = 1
 lcd_d4 = 2
@@ -34,8 +46,6 @@ lcd_d7 = 5
 lcd_red = 6
 lcd_green = 7
 lcd_blue = 8
-
-# Define LCD column and row size for a 20x4 LCD.
 lcd_columns = 20
 lcd_rows = 4
 
@@ -136,11 +146,27 @@ def get_rmat_scan():
     return rmat_scan
 
 
+def check_loader():
+    # Check if the loader is plugged in.
+    # If the loader is plugged in then the outlet button is OPEN (OFF).
+    if btn_pin:
+        if DEBUG:
+            print("Nothing is plugged into the loader outlet!")
+        lcd_ctrl("LOADER NOT FOUND!\nPlease check the\nLoader outlet", red)
+        sleep(10)
+        run_or_exit_program(run)
+    else:
+        if DEBUG:
+            print("Loader is plugged in.  Continuing.")
+        lcd_ctrl("LOADER FOUND", green)
+        sleep(1)
+
+
 def start_loader():
     # TODO
-    # GPIO control for PST.
-    input("Loader is running.  Press ENTER to exit test.")
-    run_or_exit_program('exit')
+    # GPIO control for SSR.
+    lcd_ctrl("ENERGIZING\nLOADER", white)
+    IO.output(ssr_pin, 1)  # Turn on the Solid State Relay
 
 
 def run_or_exit_program(status):
@@ -159,6 +185,7 @@ def run_or_exit_program(status):
 ###############################################################################
 
 def main():
+    check_loader()  # Check that something is plugged into the loader outlet.
     lcd_msg ="LOADER\nCONTROLLER\nASSIGNED TO\nPRESS" + PRESS_ID
     lcd_ctrl(lcd_msg, white)
     if DEBUG:
@@ -204,7 +231,9 @@ def main():
         lcd_ctrl(lcd_msg, green)
         start_loader()
     else:
-        print("Invalid Material!")
+        if DEBUG:
+            print("Invalid Material!")
+        lcd_ctrl("INCORRECT\nMATERIAL!", red)
         run_or_exit_program('run')
 
 
