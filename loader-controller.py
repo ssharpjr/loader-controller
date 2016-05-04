@@ -165,6 +165,8 @@ def check_loader():
 def start_loader():
     # TODO
     # GPIO control for SSR.
+    if DEBUG:
+        print("Energizing Loader")
     lcd_ctrl("ENERGIZING\nLOADER", white)
     IO.output(ssr_pin, 1)  # Turn on the Solid State Relay
 
@@ -234,6 +236,7 @@ def main():
         if DEBUG:
             print("Invalid Material!")
         lcd_ctrl("INCORRECT\nMATERIAL!", red)
+        sleep(5)  # Pause so the user can see the error.
         run_or_exit_program('run')
 
 
