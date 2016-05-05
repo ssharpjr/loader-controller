@@ -90,7 +90,8 @@ def get_wo_scan():
     # wo_scan = '9934386'  # Should be 9934386 for test.
     wo_scan = ''
     if DEBUG:
-        wo_scan = input("Scan Workorder: ")
+        # wo_scan = input("Scan Workorder: ")
+        wo_scan = sys.stdin.readline().rstrip()
     else:
         wo_scan = input()  # No console output
     return wo_scan
@@ -198,7 +199,6 @@ def check_loader():
     if btn == 1:
         if DEBUG:
             print("\nButton is not pressed (Outlet cover open). Continuing.")
-        lcd_ctrl("LOADER DETECTED", 'green')
         run_or_exit_program('run')
 
 
