@@ -16,16 +16,16 @@ import RPi.GPIO as IO  # For standard GPIO methods.
 
 # CONSTANTS
 DEBUG = True
-PRESS_ID = '125'  # Should be 125 for test.  This does not change!
+PRESS_ID = '136'  # Should be 125 for test.  This does not change!
 
 
 # Variables
-api_url = 'http://localhost:5000'  # Web API URL
+api_url = 'http://10.130.2.148'  # Web API URL
 
 
 # GPIO Setup
-ssr_pin = 23  # OUTPUT - Turns on the Solid State Relay
-btn_pin = 24  # INPUT - Reads the outlet cover button
+btn_pin = 23  # INPUT - Reads the outlet cover button
+ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay
 
 IO.setmode(IO.BCM)
 IO.setup(ssr_pin, IO.OUT, initial=0)
