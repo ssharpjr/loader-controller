@@ -153,12 +153,14 @@ def get_rmat_scan():
 def start_loader():
     if DEBUG:
         print("\nEnergizing Loader")
+    sleep(1)
     IO.output(ssr_pin, 1)  # Turn on the Solid State Relay.
 
 
 def stop_loader():
     if DEBUG:
         print("\nDe-energizing Loader")
+    sleep(1)
     IO.output(ssr_pin, 0)  # Turn off the Solid State Relay.
 
 
@@ -261,19 +263,19 @@ def main():
     # Scan the Raw Material Serial Number Barcode.
     serial_from_label = get_rmat_scan()
     if DEBUG:
-        print("Serial Number from Label: " + serial_from_label
+        print("Serial Number from Label: " + serial_from_label)
 
     
     # Request Raw Material Item Number from the API.
-    rmat_from_api = serial_api_request(serial_from_label)
+    rmat_from_api_inv = serial_api_request(serial_from_label)
     if DEBUG:
-      print("RM Item Number from API: " + rmat_from_api)
+      print("RM Item Number from API: " + rmat_from_api_inv)
 
     
     # Verify the Raw Material Item Number.
     if DEBUG:
         print("Checking if raw material matches this workorder...")
-    if rmat_from_api_wo == rmat_from_api:
+    if rmat_from_api_wo == rmat_from_api_inv:
         if DEBUG:
             print("Material matches workorder.  Continuing...")
             print("Starting the Loader!")
@@ -292,10 +294,8 @@ def main():
 def run():
     while True:
         try:
-            stop_loader()
-            # check_outlet_button()
-            # main()
-            start_loader()
+            check_outlet_button()
+            main()
         except KeyboardInterrupt:
             run_or_exit_program('exit')
 
