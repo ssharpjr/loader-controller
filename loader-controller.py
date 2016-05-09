@@ -4,6 +4,7 @@
 # TODO: Setup Loader Controller
 
 
+import os
 import sys
 import requests
 from time import sleep
@@ -88,12 +89,8 @@ def lcd_ctrl(msg, color, clear=True):
 def get_wo_scan():
     lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
     # wo_scan = '9934386'  # Should be 9934386 for test.
-    wo_scan = ''
-    if DEBUG:
-        # wo_scan = input("Scan Workorder: ")
-        wo_scan = sys.stdin.readline().rstrip()
-    else:
-        wo_scan = input()  # No console output
+    wo_scan = input("Scan Workorder: ")
+    # wo_scan = sys.stdin.readline().rstrip()
     return wo_scan
 
 
@@ -111,9 +108,9 @@ def wo_api_request(wo_id):
     except:
         pass
     try:
-        press_from_wo = data['press']
-        rmat_from_wo = data['rmat']
-        return press_from_wo, rmat_from_wo
+        press_from_api_wo = data['press']
+        rmat_from_api_wo = data['rmat']
+        return press_from_api_wo, rmat_from_api_wo
     except:
         pass
 
@@ -165,18 +162,32 @@ def stop_loader():
     IO.output(ssr_pin, 0)  # Turn off the Solid State Relay.
 
 
+def restart_program():
+    print("\nRestarting program")
+    # sleep(1)
+    IO.cleanup()
+    os.execv(__file__, sys.argv)
+
+
 def run_or_exit_program(status):
     if status == 'run':
-        if DEBUG:
-            print("\nStarting over...")
-        run()
+       restart_program() 
     elif status == 'exit':
-        if DEBUG:
-            print("\nExiting")
+        print("\nExiting")
+        stop_loader()
         lcd.set_color(0, 0, 0)  # Turn off backlight
         lcd.clear()
         IO.cleanup()
         sys.exit()
+
+
+def check_outlet_button():
+    btn = IO.input(btn_pin)
+    if btn == 0:  # Button is pressed, outlet closed.
+        if DEBUG:
+            print("\nButton is pressed (Outlet cover closed).")
+        lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
+        wait_for_button()
 
 
 def wait_for_button():
@@ -184,21 +195,19 @@ def wait_for_button():
     btn = IO.input(btn_pin)
     while not btn:
         btn = IO.input(btn_pin)
-        if DEBUG:
-            print("\nButton is pressed (Outlet cover closed).")
-        lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
-        sleep(1)
+        # lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
+        sleep(3)
 
     btn = IO.input(btn_pin)
     print("\nButton state: " + str(btn) + " (Button is released)")
-    restart_program()  # Restart the program.
+    restart_program()  # Restart the program (Break out of the input loop).
 
 
 # Interrupt Callback function
 def btn_cb(channel):
     sleep(0.1)
     stop_loader()
-    wait_for_button()
+    check_outlet_button()
 
 ###############################################################################
 # Interrupts
@@ -212,49 +221,64 @@ IO.add_event_detect(btn_pin, IO.FALLING, callback=btn_cb, bouncetime=300)
 ###############################################################################
 
 def main():
-    stop_loader()  # Start by making sure the loader is already off.
 
     print("Starting Loader Controller Program")
     lcd_msg ="LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
     lcd_ctrl(lcd_msg, 'white')
-    # Scan the Workorder Number (ID) Barcode.
     sleep(3)
-    wo_id_from_wo = get_wo_scan()
 
+    
+    # Request the Workorder Number (ID) Barcode.
+    wo_id_from_wo = get_wo_scan()
+    if DEBUG:
+        print("Scanned Work Order: " + wo_id_from_wo)
+
+    
     # Request Press Number and Raw Material Item Number from the API.
-    press_from_wo, rmat_from_wo = wo_api_request(wo_id_from_wo)
+    press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
+    if DEBUG:
+        print("Press Number from API: " + press_from_api_wo)
+        print("RM Item Number from API: " + rmat_from_api_wo)
+
 
     # Verify the Press Number.
     if DEBUG:
         print("Checking if workorder is currently running on this press...")
-    if press_from_wo == PRESS_ID:
+    if press_from_api_wo == PRESS_ID:
         if DEBUG:
-            print("Match.  Workorder #" + wo_id_from_wo +
+            print("Match.  Workorder: " + wo_id_from_wo +
                   " is running on Press #" + PRESS_ID)
             print("Good Workorder.  Continuing...")
     else:
         lcd_ctrl("INCORRECT\nWORKORDER!", 'red')
         if DEBUG:
             print("Incorrect Workorder!")
-            print("This Workorder is for press: " + press_from_wo)
+            print("This Workorder is for press: " + press_from_api_wo)
         sleep(5)  # Pause so the user can see the error.
         run_or_exit_program('run')
 
+
     # Scan the Raw Material Serial Number Barcode.
     serial_from_label = get_rmat_scan()
+    if DEBUG:
+        print("Serial Number from Label: " + serial_from_label
 
+    
     # Request Raw Material Item Number from the API.
     rmat_from_api = serial_api_request(serial_from_label)
+    if DEBUG:
+      print("RM Item Number from API: " + rmat_from_api)
 
+    
     # Verify the Raw Material Item Number.
     if DEBUG:
         print("Checking if raw material matches this workorder...")
-    if rmat_from_wo == rmat_from_api:
+    if rmat_from_api_wo == rmat_from_api:
         if DEBUG:
             print("Material matches workorder.  Continuing...")
             print("Starting the Loader!")
-        # Display Press ID, FG Item Description and RM Description?
-        lcd_msg = "Press #" + PRESS_ID
+        
+        lcd_msg = "PRESS: " + PRESS_ID + "\n\nWORKORDER: " + wo_id
         lcd_ctrl(lcd_msg, 'green')
         start_loader()
     else:
@@ -268,7 +292,10 @@ def main():
 def run():
     while True:
         try:
-            main()
+            stop_loader()
+            # check_outlet_button()
+            # main()
+            start_loader()
         except KeyboardInterrupt:
             run_or_exit_program('exit')
 
