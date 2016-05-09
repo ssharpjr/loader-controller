@@ -89,7 +89,7 @@ def lcd_ctrl(msg, color, clear=True):
 def network_fail():
     if DEBUG:
         print("Failed to get data from API")
-    lcd_ctrl("NETWORK FAILURE\n\nIf this persists\ncontact TPI IT Dept", 'red')
+    lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\nRestarting...", 'red')
     sleep(10)
     run_or_exit_program('run')
 
@@ -103,9 +103,13 @@ def get_wo_scan():
 
 
 def wo_api_request(wo_id):
+    # Notify user of potential pause
+    lcd_ctrl("GETTING\nWORKORDER\nINFORMATION...", 'blue')
+
     url = api_url + '/wo/' + wo_id
-    resp = requests.get(url=url)
+    resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
+    
     try:
         if data['error']:
             lcd_ctrl("INVALID WORKORDER!", 'red')
@@ -114,19 +118,23 @@ def wo_api_request(wo_id):
             sleep(5)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
-        network_fail()
+        pass
     try:
         press_from_api_wo = data['press']
         rmat_from_api_wo = data['rmat']
         return press_from_api_wo, rmat_from_api_wo
     except:
-        network_fail()
+        pass
 
 
 def serial_api_request(sn):
+    # Notify user of the potential pause
+    lcd_ctrl("GETTING\nRAW MATERIAL\nSERIAL NUMBER\nINFORMATION...", 'blue')
+
     url = api_url + '/serial/' + sn
-    resp = requests.get(url=url)
+    resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
+    
     try:
         if data['error']:
             lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
@@ -135,11 +143,11 @@ def serial_api_request(sn):
             sleep(5)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
-        network_fail()
+        pass
     try:
         rmat_from_api = data['itemno']
     except:
-        network_fail()
+        pass
     return rmat_from_api
 
 
@@ -159,6 +167,17 @@ def get_rmat_scan():
         run_or_exit_program('run')
     rmat_scan = rmat_scan[1:]  # Strip off the "S" Qualifier.
     return rmat_scan
+
+
+def wo_monitor(wo_id_from_wo):
+    # TODO - API: check first workorder ID
+    # Check if the workorder number changes (RT job unloaded).
+    wo_id = wo_id_from_wo
+    url = api_url + '/wo/' + wo_id
+    resp = requests.get(url=url, timeout=10)
+    data = json.loads(resp.text)
+    
+    wo_id_from_api = data['wo_id']
 
 
 def start_loader():
@@ -248,7 +267,15 @@ def main():
 
     
     # Request Press Number and Raw Material Item Number from the API.
-    press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
+    if DEBUG:
+        print("Requesting data from API")
+    
+    try:
+        press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
+    except:
+        network_fail()
+    
+    
     if DEBUG:
         print("Press Number from API: " + press_from_api_wo)
         print("RM Item Number from API: " + rmat_from_api_wo)
@@ -293,7 +320,8 @@ def main():
         
         lcd_msg = "PRESS: " + PRESS_ID + "\n\nWORKORDER: " + wo_id
         lcd_ctrl(lcd_msg, 'green')
-        start_loader()
+        start_loader()  # Looks good, turn on the loader.
+        wo_monitor(wo_id_from_wo)  # Watch if the workorder number changes.
     else:
         if DEBUG:
             print("Invalid Material!")
