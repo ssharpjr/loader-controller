@@ -29,7 +29,7 @@ Use a mini computer (MPC), a barcode scanner, and aPowertail Switch II to contro
 ##### LCD Feedback:
 - Keep the user informed of the current state of the loader (running/stopped) and the current step in the validation process.
     + Scan Workorder
-    + Scan Raw Material  
+    + Scan Raw Material
 
 ##### Parts List:
 - Raspberry Pi 2 (MPC)
@@ -59,3 +59,11 @@ Use a mini computer (MPC), a barcode scanner, and aPowertail Switch II to contro
 
 ##### MPC Client Notes:
 - Python to read JSON into variables.
+
+##### Fail Points:
+- Network unavailable.
+- Outlet button malfunction.
+- Material is placed too far away from loader controller.  It will be too far away to rescan.
+
+
+
