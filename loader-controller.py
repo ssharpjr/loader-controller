@@ -86,6 +86,14 @@ def lcd_ctrl(msg, color, clear=True):
     lcd.message(msg)
 
 
+def network_fail():
+    if DEBUG:
+        print("Failed to get data from API")
+    lcd_ctrl("NETWORK FAILURE\n\nIf this persists\ncontact TPI IT Dept", 'red')
+    sleep(10)
+    run_or_exit_program('run')
+
+
 def get_wo_scan():
     lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
     # wo_scan = '9934386'  # Should be 9934386 for test.
@@ -106,13 +114,13 @@ def wo_api_request(wo_id):
             sleep(5)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
-        pass
+        network_fail()
     try:
         press_from_api_wo = data['press']
         rmat_from_api_wo = data['rmat']
         return press_from_api_wo, rmat_from_api_wo
     except:
-        pass
+        network_fail()
 
 
 def serial_api_request(sn):
@@ -127,8 +135,11 @@ def serial_api_request(sn):
             sleep(5)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
-        pass
-    rmat_from_api = data['itemno']
+        network_fail()
+    try:
+        rmat_from_api = data['itemno']
+    except:
+        network_fail()
     return rmat_from_api
 
 
