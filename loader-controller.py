@@ -179,34 +179,26 @@ def run_or_exit_program(status):
         sys.exit()
 
 
-def wait_for_button_release():
-    # Wait for the button to be released again.
-    while btn_pin:
-        sleep(1)
-    run_or_exit_program('run')
-
-
-def check_loader():
-    # Check if the loader is plugged in.
-    # If the loader is plugged in then the outlet button is OPEN (OFF).
-    sleep(0.1)
+def wait_for_button():
+    # Wait for button to be released again (btn == 1).
     btn = IO.input(btn_pin)
-    if btn == 0:
+    while not btn:
+        btn = IO.input(btn_pin)
         if DEBUG:
             print("\nButton is pressed (Outlet cover closed).")
         lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
-        wait_for_button_release()
-    if btn == 1:
-        if DEBUG:
-            print("\nButton is not pressed (Outlet cover open). Continuing.")
-        run_or_exit_program('run')
+        sleep(1)
+
+    btn = IO.input(btn_pin)
+    print("\nButton state: " + str(btn) + " (Button is released)")
+    restart_program()  # Restart the program.
 
 
 # Interrupt Callback function
 def btn_cb(channel):
-    stop_loader()  # Stop loader before checking the outlet.
-    check_loader()
-
+    sleep(0.1)
+    stop_loader()
+    wait_for_button()
 
 ###############################################################################
 # Interrupts
@@ -220,6 +212,8 @@ IO.add_event_detect(btn_pin, IO.FALLING, callback=btn_cb, bouncetime=300)
 ###############################################################################
 
 def main():
+    stop_loader()  # Start by making sure the loader is already off.
+
     print("Starting Loader Controller Program")
     lcd_msg ="LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
     lcd_ctrl(lcd_msg, 'white')
