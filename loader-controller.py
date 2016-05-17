@@ -109,7 +109,7 @@ def wo_api_request(wo_id):
     url = api_url + '/wo/' + wo_id
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
-    
+
     try:
         if data['error']:
             lcd_ctrl("INVALID WORKORDER!", 'red')
@@ -134,7 +134,7 @@ def serial_api_request(sn):
     url = api_url + '/serial/' + sn
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
-    
+
     try:
         if data['error']:
             lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
@@ -176,7 +176,7 @@ def wo_monitor(wo_id_from_wo):
     url = api_url + '/wo/' + wo_id
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
-    
+
     wo_id_from_api = data['wo_id']
 
 
@@ -203,7 +203,7 @@ def restart_program():
 
 def run_or_exit_program(status):
     if status == 'run':
-       restart_program() 
+       restart_program()
     elif status == 'exit':
         print("\nExiting")
         stop_loader()
@@ -259,23 +259,23 @@ def main():
     lcd_ctrl(lcd_msg, 'white')
     sleep(3)
 
-    
+
     # Request the Workorder Number (ID) Barcode.
     wo_id_from_wo = get_wo_scan()
     if DEBUG:
         print("Scanned Work Order: " + wo_id_from_wo)
 
-    
+
     # Request Press Number and Raw Material Item Number from the API.
     if DEBUG:
         print("Requesting data from API")
-    
+
     try:
         press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
     except:
         network_fail()
-    
-    
+
+
     if DEBUG:
         print("Press Number from API: " + press_from_api_wo)
         print("RM Item Number from API: " + rmat_from_api_wo)
@@ -303,13 +303,13 @@ def main():
     if DEBUG:
         print("Serial Number from Label: " + serial_from_label)
 
-    
+
     # Request Raw Material Item Number from the API.
     rmat_from_api_inv = serial_api_request(serial_from_label)
     if DEBUG:
       print("RM Item Number from API: " + rmat_from_api_inv)
 
-    
+
     # Verify the Raw Material Item Number.
     if DEBUG:
         print("Checking if raw material matches this workorder...")
@@ -317,7 +317,7 @@ def main():
         if DEBUG:
             print("Material matches workorder.  Continuing...")
             print("Starting the Loader!")
-        
+
         lcd_msg = "PRESS: " + PRESS_ID + "\n\nWORKORDER: " + wo_id
         lcd_ctrl(lcd_msg, 'green')
         start_loader()  # Looks good, turn on the loader.
