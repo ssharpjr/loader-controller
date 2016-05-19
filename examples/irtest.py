@@ -14,10 +14,10 @@ while True:
     try:
         if io.input(18) == 1:
             print("IR Detected")
-            sleep(1)
+            sleep(0.1)
         elif io.input(18) == 0:
             print("IR Not Detected")
-            sleep(1)
+            sleep(0.1)
     except KeyboardInterrupt:
         io.cleanup()
         sys.exit()
