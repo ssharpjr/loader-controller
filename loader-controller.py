@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# TODO: Setup Loader Controller
-
+# TODO: wo_monitor()
+#       Periodically check if the captured work order is still current in RT.
 
 import os
 import sys
@@ -25,15 +25,15 @@ api_url = 'http://10.130.2.148'  # Web API URL
 
 
 # GPIO Setup
-btn_pin = 23  # INPUT - Reads the outlet cover button
-ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay
+ir_pin = 23  # INPUT - Reads the outlet IR beam state.
+ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay.
 
 IO.setmode(IO.BCM)
 IO.setup(ssr_pin, IO.OUT, initial=0)
 
-# Wire button from PIN to GND. Default state = False.
-# The edge will FALL when pressed.
-IO.setup(btn_pin, IO.IN, pull_up_down=IO.PUD_UP)
+# Wire IR beam sensor from PIN to GND. Default state = False.
+# The edge will RISE when a signal is present.
+IO.setup(ir_pin, IO.IN, pull_up_down=IO.PUD_UP)
 
 
 
@@ -89,6 +89,7 @@ def lcd_ctrl(msg, color, clear=True):
 def network_fail():
     if DEBUG:
         print("Failed to get data from API")
+        print("System will restart in 10 seconds.")
     lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\nRestarting...", 'red')
     sleep(10)
     run_or_exit_program('run')
@@ -114,7 +115,7 @@ def wo_api_request(wo_id):
         if data['error']:
             lcd_ctrl("INVALID WORKORDER!", 'red')
             if DEBUG:
-                print("Invalid Workorder!")
+                print("Invalid Workorder!  (data = error)")
             sleep(5)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
@@ -139,7 +140,7 @@ def serial_api_request(sn):
         if data['error']:
             lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
             if DEBUG:
-                print("Invalid Serial Number!")
+                print("Invalid Serial Number! (data = error)")
             sleep(5)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
@@ -152,6 +153,9 @@ def serial_api_request(sn):
 
 
 def get_rmat_scan():
+    # Get the Raw Material Serial Number.
+    # Check for the "S" qualifier.
+    # Strip the qualifier is present and return the serial number.
     lcd_ctrl("SCAN\nRAW MATERIAL\nSERIAL NUMBER", 'white')
     # rmat_scan = 'S07234585' for test.
     rmat_scan = ''
@@ -162,7 +166,7 @@ def get_rmat_scan():
     if not rmat_scan.startswith('S'):
         lcd_ctrl("NOT A VALID\nSERIAL NUMBER!", 'red')
         if DEBUG:
-            print("Not a Serial Number!")
+            print("Not a Serial Number! (missing \"S\" qualifier)")
         sleep(5)  # Pause so the user can read the error.
         run_or_exit_program('run')
     rmat_scan = rmat_scan[1:]  # Strip off the "S" Qualifier.
@@ -213,38 +217,37 @@ def run_or_exit_program(status):
         sys.exit()
 
 
-def check_outlet_button():
-    btn = IO.input(btn_pin)
-    if btn == 0:  # Button is pressed, outlet closed.
+def check_outlet_beam():
+    beam = IO.input(ir_pin)
+    if beam == 1:  # Beam connected.  Nothing is in the outlet
         if DEBUG:
-            print("\nButton is pressed (Outlet cover closed).")
+            print("\nOutlet IR beam is connected. (Nothing is plugged in)")
         lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
-        wait_for_button()
+        wait_for_beam()
 
 
-def wait_for_button():
-    # Wait for button to be released again (btn == 1).
-    btn = IO.input(btn_pin)
-    while not btn:
-        btn = IO.input(btn_pin)
-        # lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
+def wait_for_beam():
+    # Wait for beam to be broken again (beam == 0).
+    beam = IO.input(ir_pin)
+    while not beam:
+        beam = IO.input(ir_pin)
         sleep(3)
 
-    btn = IO.input(btn_pin)
-    print("\nButton state: " + str(btn) + " (Button is released)")
+    beam = IO.input(ir_pin)
+    print("\nLoader Outlet IR Beam state: " + str(beam) + " (Beam is broken)")
     restart_program()  # Restart the program (Break out of the input loop).
 
 
 # Interrupt Callback function
-def btn_cb(channel):
+def beam_cb(channel):
     sleep(0.1)
     stop_loader()
-    check_outlet_button()
+    check_outlet_beam()
 
 ###############################################################################
 # Interrupts
-# If the outlet button is closed, stop everything until it opens.
-IO.add_event_detect(btn_pin, IO.FALLING, callback=btn_cb, bouncetime=300)
+# If the outlet beam is closed, stop everything until it opens.
+IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb, bouncetime=300)
 ###############################################################################
 
 
@@ -333,7 +336,7 @@ def main():
 def run():
     while True:
         try:
-            check_outlet_button()
+            check_outlet_beam()
             main()
         except KeyboardInterrupt:
             run_or_exit_program('exit')
