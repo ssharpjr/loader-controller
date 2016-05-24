@@ -229,7 +229,7 @@ def check_outlet_beam():
 def wait_for_beam():
     # Wait for beam to be broken again (beam == 0).
     beam = IO.input(ir_pin)
-    while not beam:
+    while beam:
         beam = IO.input(ir_pin)
         sleep(3)
 
