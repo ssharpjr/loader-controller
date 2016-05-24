@@ -215,7 +215,7 @@ def run_or_exit_program(status):
 
 def check_outlet_button():
     btn = IO.input(btn_pin)
-    if btn == 0:  # Button is pressed, outlet closed.
+    if btn == 1:  # Button is pressed, outlet closed.
         if DEBUG:
             print("\nButton is pressed (Outlet cover closed).")
         lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
@@ -225,7 +225,7 @@ def check_outlet_button():
 def wait_for_button():
     # Wait for button to be released again (btn == 1).
     btn = IO.input(btn_pin)
-    while not btn:
+    while btn:
         btn = IO.input(btn_pin)
         # lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
         sleep(3)
@@ -244,7 +244,7 @@ def btn_cb(channel):
 ###############################################################################
 # Interrupts
 # If the outlet button is closed, stop everything until it opens.
-IO.add_event_detect(btn_pin, IO.FALLING, callback=btn_cb, bouncetime=300)
+IO.add_event_detect(btn_pin, IO.RISING, callback=btn_cb, bouncetime=300)
 ###############################################################################
 
 
