@@ -256,7 +256,9 @@ IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb, bouncetime=300)
 ###############################################################################
 
 def main():
-
+    print()
+    print("My IP Address is: " + os.system('hostname -I'))
+    print()
     print("Starting Loader Controller Program")
     lcd_msg ="LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
     lcd_ctrl(lcd_msg, 'white')
