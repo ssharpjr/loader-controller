@@ -87,3 +87,6 @@ ENV/
 # Sublime
 *.sublime-project
 *.sublime-workspace
+
+# Custom
+config.py

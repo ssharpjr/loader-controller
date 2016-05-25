@@ -4,13 +4,12 @@
 from flask import Flask, abort, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.oracle import CHAR, NUMBER, VARCHAR2
+from config import config
 
 app = Flask(__name__)
 app.config.from_object(config)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'oracle+cx_oracle://iqms:iqtest@iqtest'
 # app.config['SQLALCHEMY_ECHO'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-# app.debug = True
 db = SQLAlchemy(app)
 
 
