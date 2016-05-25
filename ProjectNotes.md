@@ -2,21 +2,28 @@
 
 
 # Purpose:
-Prevent the material loader from loading the wrong material based on Barcode scans.
+Prevent the material loader from loading the wrong material into a press based on the BOM/Work order.
 
 
 # Solution:
-Use a mini computer (MPC), a barcode scanner, and aPowertail Switch II to control the material loader.
+- Use a mini computer (MPC), a barcode scanner, and a solid state relay (SSR) to control the material loader.
+    + Raspberry Pi
+- Setup detection for the loader outlet (button, IR beam?).
+- Setup detection for the raw material container (whisker, proximity switch).
 
 
 # Steps:
-- An AC power interrupter is installed between the AC power source and the loader in a Normally-Open (off) state.
+- A Solid State Relay is installed between the AC power source and the loader in a Normally-Open (off) state.
 - Scan the current workorder barcode.  The MPC will query the IQMS database to check the following.
-    + Is this workorder in the first position on this press (ie., is it being produced)?  [The Press ID will be static in the MPC]
-    + If yes, return the Raw Material Item Number that should be used to make this part.
-- Scan the Raw Material Barcode.
+    + Is this workorder in the first position on this press (ie., is it currently being produced)?  [The Press ID will be static in the MPC]
+    + If yes, return the Raw Material Item Number that should be used to make this part.  If not, fail and restart.
+- Scan the Raw Material Serial Number Barcode (add a qualifier check).
+    + Query IQMS for the Item Number associated with the Serial Number.
     + Compare the stored RM Item Number from IQ with the scanned Item Number.
-- If the material matches the part currently being produced then send a signal to the interrupter to allow AC power to the loader.
+- If the material matches the part currently being produced then send a signal to the SSR to allow AC power to the loader.
+- Continue running until one of the following conditions are met:
+    + Loader plug is removed from the outlet.
+    + The Raw Material container is removed from its staging location.
 
 
 # Hardware Parts List and Notes:
@@ -29,7 +36,7 @@ Use a mini computer (MPC), a barcode scanner, and aPowertail Switch II to contro
 ##### LCD Feedback:
 - Keep the user informed of the current state of the loader (running/stopped) and the current step in the validation process.
     + Scan Workorder
-    + Scan Raw Material  
+    + Scan Raw Material
 
 ##### Parts List:
 - Raspberry Pi 2 (MPC)
@@ -59,3 +66,11 @@ Use a mini computer (MPC), a barcode scanner, and aPowertail Switch II to contro
 
 ##### MPC Client Notes:
 - Python to read JSON into variables.
+
+##### Fail Points:
+- Network unavailable.
+- Outlet button malfunction.
+- Material is placed too far away from loader controller.  It will be too far away to rescan.
+
+
+
