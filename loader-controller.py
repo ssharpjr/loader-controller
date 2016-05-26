@@ -94,7 +94,7 @@ def network_fail():
         print("Failed to get data from API")
         print("System will restart in 10 seconds.")
     lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\nRestarting...", 'red')
-    sleep(10)
+    sleep(5)
     run_or_exit_program('run')
 
 
@@ -119,7 +119,7 @@ def wo_api_request(wo_id):
             lcd_ctrl("INVALID WORKORDER!", 'red')
             if DEBUG:
                 print("Invalid Workorder!  (data = error)")
-            sleep(5)  # Pause so the user can read the error.
+            sleep(3)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
         pass
@@ -144,7 +144,7 @@ def serial_api_request(sn):
             lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
             if DEBUG:
                 print("Invalid Serial Number! (data = error)")
-            sleep(5)  # Pause so the user can read the error.
+            sleep(3)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
         pass
@@ -170,7 +170,7 @@ def get_rmat_scan():
         lcd_ctrl("NOT A VALID\nSERIAL NUMBER!", 'red')
         if DEBUG:
             print("Not a Serial Number! (missing \"S\" qualifier)")
-        sleep(5)  # Pause so the user can read the error.
+        sleep(3)  # Pause so the user can read the error.
         run_or_exit_program('run')
     rmat_scan = rmat_scan[1:]  # Strip off the "S" Qualifier.
     return rmat_scan
@@ -285,7 +285,7 @@ def main():
     print("For Press " + PRESS_ID)
     lcd_msg ="LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
     lcd_ctrl(lcd_msg, 'white')
-    sleep(3)
+    sleep(1)
 
 
     # Request the Workorder Number (ID) Barcode.
