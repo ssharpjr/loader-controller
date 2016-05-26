@@ -142,7 +142,7 @@ def wo_api_request(wo_id):
             lcd_ctrl("INVALID WORKORDER!", 'red')
             if DEBUG:
                 print("Invalid Workorder!  (data = error)")
-            sleep(3)  # Pause so the user can read the error.
+            sleep(2)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
         pass
@@ -167,7 +167,7 @@ def serial_api_request(sn):
             lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
             if DEBUG:
                 print("Invalid Serial Number! (data = error)")
-            sleep(3)  # Pause so the user can read the error.
+            sleep(2)  # Pause so the user can read the error.
             run_or_exit_program('run')
     except:
         pass
@@ -193,7 +193,7 @@ def get_rmat_scan():
         lcd_ctrl("NOT A VALID\nSERIAL NUMBER!", 'red')
         if DEBUG:
             print("Not a Serial Number! (missing \"S\" qualifier)")
-        sleep(3)  # Pause so the user can read the error.
+        sleep(2)  # Pause so the user can read the error.
         run_or_exit_program('run')
     rmat_scan = rmat_scan[1:]  # Strip off the "S" Qualifier.
     return rmat_scan
@@ -374,7 +374,7 @@ def main():
         if DEBUG:
             print("Incorrect Workorder!")
             print("This Workorder is for press: " + press_from_api_wo)
-        sleep(5)  # Pause so the user can see the error.
+        sleep(2)  # Pause so the user can see the error.
         run_or_exit_program('run')
 
 
@@ -406,7 +406,7 @@ def main():
         if DEBUG:
             print("Invalid Material!")
         lcd_ctrl("INCORRECT\nMATERIAL!", 'red')
-        sleep(5)  # Pause so the user can see the error.
+        sleep(2)  # Pause so the user can see the error.
         run_or_exit_program('run')
 
 
