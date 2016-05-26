@@ -24,6 +24,7 @@ PRESS_ID = '136'  # This does not change!
 api_url = 'http://10.130.0.42'  # Web API URL
 
 # GPIO Setup
+rst_btn = 18  # INPUT - Manually restart the program.
 ir_pin = 23  # INPUT - Reads the outlet IR beam state.
 ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay.
 
@@ -34,6 +35,9 @@ IO.setup(ssr_pin, IO.OUT, initial=0)
 # The edge will RISE when a signal is present.
 IO.setup(ir_pin, IO.IN, pull_up_down=IO.PUD_UP)
 
+# Wire the restart button from PIN to 3V3.  Default state = True.
+# The edge will FALL when pressed.
+IO.setup(rst_btn, IO.IN, pull_up_down=IO.PUD_DOWN)
 
 
 ###############################################################################
@@ -183,12 +187,11 @@ def wo_monitor(wo_id_from_wo):
 
     if DEBUG:
         print("wo_monitor() loop running")
-    while not IO.input(ir_pin):
-        pass # Run until the program gets interrupted.
-    if DEBUG:
-        ir_state = IO.input(ir_pin)
-        print("IR State is: " + str(ir_state))
-    beam_cb(ir_pin)  # Run callback if interrupted.
+    while IO.input(rst_btn):
+        # Run until the program gets interrupted.
+        sleep(1)
+
+    # beam_cb(ir_pin)  # Run callback if interrupted.
 
 
 def start_loader():
@@ -247,14 +250,27 @@ def wait_for_beam():
 
 # Interrupt Callback function
 def beam_cb(channel):
+    if DEBUG:
+        print("beam_cb() callback called")
     sleep(0.1)
     stop_loader()
     check_outlet_beam()
 
+
+def rst_btn_cb(channel):
+    if DEBUG:
+        print("rst_btn_cb() callback called")
+    sleep(0.1)
+    lcd_ctrl("RESETTING\nLOADER\nCONTROLLER", 'white')
+    sleep(3)
+    restart_program()
+
+
 ###############################################################################
 # Interrupts
 # If the outlet beam is connected, stop everything until it disconnects.
-IO.add_event_detect(ir_pin, IO.BOTH, callback=beam_cb)
+# IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb)
+IO.add_event_detect(rst_btn, IO.FALLING, callback=rst_btn_cb)
 ###############################################################################
 
 
@@ -344,7 +360,7 @@ def main():
 def run():
     while True:
         try:
-            check_outlet_beam()
+            # check_outlet_beam()
             main()
         except KeyboardInterrupt:
             run_or_exit_program('exit')
