@@ -180,8 +180,14 @@ def wo_monitor(wo_id_from_wo):
     # resp = requests.get(url=url, timeout=10)
     # data = json.loads(resp.text)
     # wo_id_from_api = data['wo_id']
+
+    if DEBUG:
+        print("wo_monitor() loop running")
     while not IO.input(ir_pin):
         pass # Run until the program gets interrupted.
+    if DEBUG:
+        ir_state = IO.input(ir_pin)
+        print("IR State is: " + str(ir_state))
     beam_cb(ir_pin)  # Run callback if interrupted.
 
 
@@ -202,7 +208,6 @@ def stop_loader():
 def restart_program():
     print("\nRestarting program")
     # sleep(1)
-    stop_loader()
     IO.cleanup()
     os.execv(__file__, sys.argv)
 
@@ -212,7 +217,6 @@ def run_or_exit_program(status):
        restart_program()
     elif status == 'exit':
         print("\nExiting")
-        stop_loader()
         lcd.set_color(0, 0, 0)  # Turn off backlight
         lcd.clear()
         IO.cleanup()
@@ -237,6 +241,7 @@ def wait_for_beam():
 
     beam = IO.input(ir_pin)
     print("\nLoader Outlet IR Beam state: " + str(beam) + " (Beam is broken)")
+    print("Something is plugged into the loader outlet.  Let's proceed")
     restart_program()  # Restart the program (Break out of the input loop).
 
 
@@ -249,7 +254,7 @@ def beam_cb(channel):
 ###############################################################################
 # Interrupts
 # If the outlet beam is connected, stop everything until it disconnects.
-IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb)
+IO.add_event_detect(ir_pin, IO.BOTH, callback=beam_cb)
 ###############################################################################
 
 
@@ -344,7 +349,8 @@ def run():
         except KeyboardInterrupt:
             run_or_exit_program('exit')
         except:
-            stop_loader()
+            # stop_loader()
+            print("GPIO Cleanup")
             IO.cleanup()
 
 
