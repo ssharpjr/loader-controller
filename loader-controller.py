@@ -189,9 +189,9 @@ def wo_monitor(wo_id_from_wo):
         print("wo_monitor() loop running")
     while IO.input(rst_btn):
         # Run until the program gets interrupted.
-        sleep(1)
+        sleep(0.1)  # Simple debounce
 
-    # beam_cb(ir_pin)  # Run callback if interrupted.
+    rst_btn_cb(rst_btn)  # Run callback if interrupted.
 
 
 def start_loader():
@@ -261,8 +261,9 @@ def rst_btn_cb(channel):
     if DEBUG:
         print("rst_btn_cb() callback called")
     sleep(0.1)
+    stop_loader()
     lcd_ctrl("RESETTING\nLOADER\nCONTROLLER", 'white')
-    sleep(3)
+    sleep(1)
     restart_program()
 
 
@@ -270,7 +271,7 @@ def rst_btn_cb(channel):
 # Interrupts
 # If the outlet beam is connected, stop everything until it disconnects.
 # IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb)
-IO.add_event_detect(rst_btn, IO.FALLING, callback=rst_btn_cb)
+# IO.add_event_detect(rst_btn, IO.FALLING, callback=rst_btn_cb, bouncetime=300)
 ###############################################################################
 
 
@@ -345,9 +346,9 @@ def main():
             print("Material matches workorder.  Continuing...")
             print("Starting the Loader!")
 
+        start_loader()  # Looks good, turn on the loader.
         lcd_msg = "PRESS: " + PRESS_ID + "\nWORKORDER: " + wo_id_from_wo + "\n\nLOADER RUNNING"
         lcd_ctrl(lcd_msg, 'green')
-        start_loader()  # Looks good, turn on the loader.
         wo_monitor(wo_id_from_wo)  # Watch if the workorder number changes.
     else:
         if DEBUG:
