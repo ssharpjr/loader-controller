@@ -17,7 +17,7 @@ import RPi.GPIO as IO  # For standard GPIO methods.
 
 # CONSTANTS
 DEBUG = True
-PRESS_ID = '125'  # Should be 125 for test.  This does not change!
+PRESS_ID = '136'  # Should be 125 for test.  This does not change!
 
 
 # Variables
@@ -347,6 +347,9 @@ def run():
             main()
         except KeyboardInterrupt:
             run_or_exit_program('exit')
+        except:
+            stop_loader()
+            IO.cleanup()
 
 
 if __name__ == '__main__':
