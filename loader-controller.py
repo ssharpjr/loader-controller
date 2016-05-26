@@ -17,12 +17,11 @@ import RPi.GPIO as IO  # For standard GPIO methods.
 
 # CONSTANTS
 DEBUG = True
-PRESS_ID = '136'  # Should be 125 for test.  This does not change!
+PRESS_ID = '136'  # This does not change!
 
 
 # Variables
 api_url = 'http://10.130.0.42'  # Web API URL
-
 
 # GPIO Setup
 ir_pin = 23  # INPUT - Reads the outlet IR beam state.
@@ -250,7 +249,7 @@ def beam_cb(channel):
 ###############################################################################
 # Interrupts
 # If the outlet beam is connected, stop everything until it disconnects.
-IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb, bouncetime=300)
+IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb)
 ###############################################################################
 
 
@@ -259,9 +258,6 @@ IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb, bouncetime=300)
 ###############################################################################
 
 def main():
-    print()
-    print("My IP Address is: ")
-    ipaddr = os.system('hostname -I')
     print()
     print("Starting Loader Controller Program")
     print("For Press " + PRESS_ID)
