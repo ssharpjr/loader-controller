@@ -210,11 +210,32 @@ def wo_monitor(wo_id_from_wo):
 
     if DEBUG:
         print("wo_monitor() loop running")
-    while IO.input(rst_btn):
-        # Run until the program gets interrupted.
-        sleep(0.1)  # Simple debounce
 
-    rst_btn_cb(rst_btn)  # Run callback if interrupted.
+    while True:
+        IO.wait_for_edge(rst_btn, IO.FALLING)
+        sleep(0.1)
+        if DEBUG:
+            print("Button pressed. Waiting")
+
+        for i in range(60):
+            sleep(0.05)  # 20ms
+
+        if IO.input(rst_btn):
+            if DEBUG:
+                print("Button Released. Restarting program")
+            rst_btn_cb(rst_btn)
+
+        if not IO.input(rst_btn):
+            if i >= 59:
+                if DEBUG:
+                    print("Rebooting RPI")
+                reboot_system()
+
+    # while IO.input(rst_btn):
+        # Run until the program gets interrupted.
+        # sleep(0.1)  # Simple debounce
+
+    # rst_btn_cb(rst_btn)  # Run callback if interrupted.
 
 
 def start_loader():
@@ -236,6 +257,14 @@ def restart_program():
     # sleep(1)
     IO.cleanup()
     os.execv(__file__, sys.argv)
+
+
+def reboot_system():
+    lcd.clear()
+    lcd_ctrl("REBOOTING SYSTEM\n\nSTANDBY...", 'blue')
+    IO.cleanup()
+    os.system('sudo reboot')
+
 
 
 def run_or_exit_program(status):
