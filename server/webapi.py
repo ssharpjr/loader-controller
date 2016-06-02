@@ -43,6 +43,18 @@ class Master_Label(db.Model):
     itemno = db.Column(CHAR)
 
 
+class Work_Center(db.Model):
+    __tablename__ = 'work_center'
+    id = db.Column(NUMBER, primary_key=True)
+    eqno = db.Column(CHAR)
+
+
+class V_Sched(db.Model):
+    __tablename__ = 'v_sched'
+    work_center_id = db.Column(NUMBER, primary_key=True)
+    workorder_id = db.Column(NUMBER)
+
+
 #####################################################################
 
 
@@ -59,6 +71,20 @@ def work_order(wo_id):
         itemno = res.Arinvt.itemno.rstrip()
         return jsonify({'press': eqno,
                         'rmat': itemno})
+    except:
+        return abort(404)
+
+
+@app.route('/wo_monitor/<int:wo_id>', methods=['GET'])
+def wo_monitor(wo_id):
+    res = db.session.query(Work_Center, V_Sched).\
+          filter(V_Sched.work_center_id == Work_Center.id).\
+          filter(V_Sched.workorder_id == wo_id).\
+          first() or abort(404)
+    try:
+        eqno = res.Work_Center.eqno.rstrip()
+        return jsonify({'press': eqno,
+                        'wo_id': wo_id})
     except:
         return abort(404)
 
@@ -81,4 +107,4 @@ def not_found(error):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
