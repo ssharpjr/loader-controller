@@ -26,6 +26,7 @@
 
 # TODO: wo_monitor()
 #       Periodically check if the captured work order is still current in RT.
+# TODO: Setup the Gaylord switch.
 
 import os
 import sys
@@ -200,18 +201,19 @@ def get_rmat_scan():
 
 
 def wo_monitor(wo_id_from_wo):
-    # TODO - API: check first workorder ID
-    # Check if the workorder number changes (RT job unloaded).
-    # wo_id = wo_id_from_wo
-    # url = api_url + '/wo/' + wo_id
-    # resp = requests.get(url=url, timeout=10)
-    # data = json.loads(resp.text)
-    # wo_id_from_api = data['wo_id']
-
+    # Check if the workorder number changes (RT workorder unloaded).
     if DEBUG:
         print("wo_monitor() loop running")
+    wo_id = wo_id_from_wo
+    url = api_url + '/wo_monitor/' + wo_id
+    resp = requests.get(url=url, timeout=10)
+    data = json.loads(resp.text)
 
     while True:
+        if data['error']:
+            # If data == error, then the workorder is no longer loaded.
+            # Restart the program
+            rst_btn_cb(rst_btn)
         IO.wait_for_edge(rst_btn, IO.FALLING)
         sleep(0.1)
         if DEBUG:
@@ -324,6 +326,7 @@ def rst_btn_cb(channel):
 # If the outlet beam is connected, stop everything until it disconnects.
 # IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb)
 # IO.add_event_detect(rst_btn, IO.FALLING, callback=rst_btn_cb, bouncetime=300)
+# NOTE: Disabled because the IR sensor is picking up EMI and triggering.
 ###############################################################################
 
 
