@@ -72,5 +72,8 @@ Prevent the material loader from loading the wrong material into a press based o
 - Outlet button malfunction.
 - Material is placed too far away from loader controller.  It will be too far away to rescan.
 
-
+# Revisions and New Features
+- Add pallet sensor switch to augment the reset button function.
+- Once the loader is running, periodically check if the work order that was scanned is still running (wo_monitor()).
+- Poll the loader controller to see if it's on and what state it is in.
 
