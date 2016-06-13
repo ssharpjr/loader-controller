@@ -2,3 +2,4 @@ v1.0:
   * Initial release.  First deployed version.
 v1.1pre
   * Added the Workorder monitor feature.  This monitors the currently running workorder and restarts the program if it changes.
+  * Renamed loader_controller.py to make it easier to import.
