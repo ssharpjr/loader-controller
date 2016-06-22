@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+###############################################################################
 # The MIT License (MIT)
 #
 # Copyright (c) 2016 Stacey Sharp (github.com/ssharpjr)
@@ -22,12 +23,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+###############################################################################
 
 # TODO: wo_monitor()
 #       Periodically check if the captured work order is still current in RT.
 # TODO: Setup the Gaylord switch.
-# TODO: Pull PRESS_ID from /boot/pressid.txt
+# TODO: Pull PRESS_ID from /boot/pressid.txt. This will allow for better
+#       replication to other presses.
 
 
 import os
@@ -51,13 +53,13 @@ api_url = 'http://10.130.0.42'  # Web API URL
 
 # GPIO Setup
 rst_btn = 18  # INPUT - Manually restart the program.
-ir_pin = 23  # INPUT - Reads the outlet IR beam state.
+ir_pin  = 23  # INPUT - Reads the IR sensor state.
 ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay.
 
 IO.setmode(IO.BCM)
 IO.setup(ssr_pin, IO.OUT, initial=0)
 
-# Wire IR beam sensor from PIN to GND. Default state = False.
+# Wire IR sensor from PIN to GND. Default state = False.
 # The edge will RISE when a signal is present.
 IO.setup(ir_pin, IO.IN, pull_up_down=IO.PUD_UP)
 
@@ -232,7 +234,7 @@ def wo_monitor(wo_id_from_wo):
 
 
 def sensor_monitor():
-    if IO.input(rst_btn) == 1:
+    if IO.input(ir_pin) == 1:
         if DEBUG:
             print("Sensor detected.  Pallet moved")
         run_or_exit_program('run')
@@ -277,28 +279,6 @@ def run_or_exit_program(status):
         sys.exit()
 
 
-def check_outlet_beam():
-    beam = IO.input(ir_pin)
-    if beam == 1:  # Beam connected.  Nothing is in the outlet.
-        if DEBUG:
-            print("\nOutlet IR beam is connected. (Nothing is plugged in)")
-        lcd_ctrl("LOADER NOT FOUND!\n\nPlease check the\nLoader outlet", 'red')
-        wait_for_beam()
-
-
-def wait_for_beam():
-    # Wait for beam to be broken again (beam == 0).
-    beam = IO.input(ir_pin)
-    while beam:
-        beam = IO.input(ir_pin)
-        sleep(1)
-
-    beam = IO.input(ir_pin)
-    print("\nLoader Outlet IR Beam state: " + str(beam) + " (Beam is broken)")
-    print("Something is plugged into the loader outlet.  Let's proceed")
-    restart_program()  # Restart the program (Break out of the input loop).
-
-
 # Interrupt Callback function
 def beam_cb(channel):
     if DEBUG:
@@ -318,15 +298,6 @@ def rst_btn_cb(channel):
     restart_program()
 
 
-###############################################################################
-# Interrupts
-# If the outlet beam is connected, stop everything until it disconnects.
-# IO.add_event_detect(ir_pin, IO.RISING, callback=beam_cb)
-# IO.add_event_detect(rst_btn, IO.FALLING, callback=rst_btn_cb, bouncetime=300)
-# NOTE: Disabled because the IR sensor is picking up EMI and triggering.
-###############################################################################
-
-
 def run_mode():
     # Run a timed loop, checking the IR sensor and API
     c = 0  # Reset counter
@@ -338,6 +309,13 @@ def run_mode():
 
         c = c + 1
         sleep(1)
+
+
+###############################################################################
+# Interrupts
+# If the reset button is pressed, restart the program
+IO.add_event_detect(rst_pin, IO.RISING, callback=rst_btn_cb, bouncetime=300)
+###############################################################################
 
 
 ###############################################################################
