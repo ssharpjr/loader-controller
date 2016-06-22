@@ -27,6 +27,8 @@
 # TODO: wo_monitor()
 #       Periodically check if the captured work order is still current in RT.
 # TODO: Setup the Gaylord switch.
+# TODO: Pull PRESS_ID from /boot/pressid.txt
+
 
 import os
 import sys
@@ -203,41 +205,37 @@ def get_rmat_scan():
 def wo_monitor(wo_id_from_wo):
     # Check if the workorder number changes (RT workorder unloaded).
     if DEBUG:
-        print("wo_monitor() loop running")
+        print("Checking loaded workorder")
     wo_id = wo_id_from_wo
     url = api_url + '/wo_monitor/' + wo_id
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
 
-    while True:
+    try:
         if data['error']:
-            # If data == error, then the workorder is no longer loaded.
-            # Restart the program
-            rst_btn_cb(rst_btn)
-        IO.wait_for_edge(rst_btn, IO.FALLING)
-        sleep(0.1)
-        if DEBUG:
-            print("Button pressed. Waiting")
-
-        for i in range(60):
-            sleep(0.05)  # 20ms
-
-        if IO.input(rst_btn):
+            lcd_ctrl("WORKORDER CHANGED!\n\nRESTARTING", 'red')
             if DEBUG:
-                print("Button Released. Restarting program")
-            rst_btn_cb(rst_btn)
+                print("Workorder changed! (data = error)")
+            sleep(2)  # Pause so the user can read the error.
+            run_or_exit_program('run')
+    except:
+        pass
+    try:
+        wo_id_from_api = data['wo_id']
+    except:
+        pass
 
-        if not IO.input(rst_btn):
-            if i >= 59:
-                if DEBUG:
-                    print("Rebooting RPI")
-                reboot_system()
+    if wo_id_from_wo != wo_id_from_api:
+        if DEBUG:
+            print("Workorders do not match.  Restarting")
+        run_or_exit_program('run')
 
-    # while IO.input(rst_btn):
-        # Run until the program gets interrupted.
-        # sleep(0.1)  # Simple debounce
 
-    # rst_btn_cb(rst_btn)  # Run callback if interrupted.
+def sensor_monitor():
+    if IO.input(rst_btn) == 1:
+        if DEBUG:
+            print("Sensor detected.  Pallet moved")
+        run_or_exit_program('run')
 
 
 def start_loader():
@@ -266,7 +264,6 @@ def reboot_system():
     lcd_ctrl("REBOOTING SYSTEM\n\nSTANDBY...", 'blue')
     IO.cleanup()
     os.system('sudo reboot')
-
 
 
 def run_or_exit_program(status):
@@ -328,6 +325,19 @@ def rst_btn_cb(channel):
 # IO.add_event_detect(rst_btn, IO.FALLING, callback=rst_btn_cb, bouncetime=300)
 # NOTE: Disabled because the IR sensor is picking up EMI and triggering.
 ###############################################################################
+
+
+def run_mode():
+    # Run a timed loop, checking the IR sensor and API
+    c = 0  # Reset counter
+    while True:
+        if c == 10:  # Check the sensor every 10 seconds
+            sensor_monitor()
+        if c == 300:  # Check the API every 5 minutes
+            wo_monitor(wo_id_from_wo)
+
+        c = c + 1
+        sleep(1)
 
 
 ###############################################################################
@@ -404,7 +414,7 @@ def main():
         start_loader()  # Looks good, turn on the loader.
         lcd_msg = "PRESS: " + PRESS_ID + "\nWORKORDER: " + wo_id_from_wo + "\n\nLOADER RUNNING"
         lcd_ctrl(lcd_msg, 'green')
-        wo_monitor(wo_id_from_wo)  # Watch if the workorder number changes.
+        run_mode()   # Start the monitors
     else:
         if DEBUG:
             print("Invalid Material!")
