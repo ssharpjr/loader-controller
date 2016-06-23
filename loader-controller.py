@@ -315,7 +315,7 @@ def run_mode():
 ###############################################################################
 # Interrupts
 # If the reset button is pressed, restart the program
-IO.add_event_detect(rst_pin, IO.RISING, callback=rst_btn_cb, bouncetime=300)
+IO.add_event_detect(rst_btn, IO.RISING, callback=rst_btn_cb, bouncetime=300)
 ###############################################################################
 
 
