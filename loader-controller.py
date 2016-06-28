@@ -405,7 +405,6 @@ def main():
 def run():
     while True:
         try:
-            # check_outlet_beam()
             main()
         except KeyboardInterrupt:
             run_or_exit_program('exit')
