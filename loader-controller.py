@@ -31,6 +31,7 @@
 # TODO: Setup the Gaylord switch.
 # TODO: Pull PRESS_ID from /boot/pressid.txt. This will allow for better
 #       replication to other presses.
+# TODO: Make the OS Read Only
 
 
 import os
@@ -52,7 +53,10 @@ PRESS_ID = '136'  # This does not change!
 # Variables
 api_url = 'http://10.130.0.42'  # Web API URL
 
+
+###############################################################################
 # GPIO Setup
+###############################################################################
 rst_btn = 18  # INPUT - Manually restart the program.
 ir_pin  = 23  # INPUT - Reads the IR sensor state.
 ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay.
@@ -67,7 +71,6 @@ IO.setup(ir_pin, IO.IN, pull_up_down=IO.PUD_UP)
 # Wire the restart button from PIN to 3V3.  Default state = True.
 # The edge will FALL when pressed.
 IO.setup(rst_btn, IO.IN, pull_up_down=IO.PUD_DOWN)
-
 
 ###############################################################################
 # Setup the LCD and MCP.
@@ -307,6 +310,7 @@ def run_mode():
             sensor_monitor()
         if c == 300:  # Check the API every 5 minutes
             wo_monitor(wo_id_from_wo)
+            c = 0  # Reset counter when 300 is hit
 
         c = c + 1
         sleep(1)

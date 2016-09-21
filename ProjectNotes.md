@@ -7,7 +7,7 @@ Prevent the material loader from loading the wrong material into a press based o
 
 # Solution:
 - Use a mini computer (MPC), a barcode scanner, and a solid state relay (SSR) to control the material loader.
-    + Raspberry Pi
+    + Raspberry Pi 3
 - Setup detection for the loader outlet (button, IR beam?).
 - Setup detection for the raw material container (whisker, proximity switch).
 
@@ -39,9 +39,10 @@ Prevent the material loader from loading the wrong material into a press based o
     + Scan Raw Material
 
 ##### Parts List:
-- Raspberry Pi 2 (MPC)
+- Raspberry Pi 3 (MPC)
 - Barcode scanner, USB wired (Use the manual to program the scanner to suffix an <ENTER> [page 13-5])
-- Powertail Switch II, isolated DC actuated AC power switch
+- Solid State Relay
+- ~~Powertail Switch II, isolated DC actuated AC power switch~~
 - 3.3VDC power adapter and divider circuit (2-10K resistors)
 - ~~Non-Invasive Current Sensor (split core current transformer), SF# SEN-11005~~
 - ~~Analog-to-Digital Converter, MCP3002, SF# COM-08636 (for the CT)~~

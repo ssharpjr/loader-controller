@@ -26,5 +26,10 @@ sudo vi /boot/config.txt
 ...
 ```
 
+##### Create Maintenance User Account
+```shell
+...
+```
+
 ## Setup Read Only Filesystem
 ...
