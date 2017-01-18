@@ -16,8 +16,8 @@ python3-pip git rpi-update python3-rpi.gpio i2c-tools
 ## Configuration
 ##### Load Kernel Modules
 ```shell
-sudo vi /etc/modules
-...
+sudo echo "i2c-bcm2708 >> /etc/modules"
+sudo echo "i2c-dev >> /etc/modules"
 ```
 
 ##### Add Modules to Config.txt

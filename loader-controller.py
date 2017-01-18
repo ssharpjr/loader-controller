@@ -32,6 +32,7 @@
 # TODO: Pull PRESS_ID from /boot/pressid.txt. This will allow for better
 #       replication to other presses.
 # TODO: Make the OS Read Only
+# TODO: Implement logging
 
 
 import os
@@ -132,9 +133,7 @@ def network_fail():
 
 def get_wo_scan():
     lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
-    # wo_scan = '9934386'  # Should be 9934386 for test.
     wo_scan = input("Scan Workorder: ")
-    # wo_scan = sys.stdin.readline().rstrip()
     return wo_scan
 
 
@@ -146,21 +145,20 @@ def wo_api_request(wo_id):
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
 
-    try:
-        if data['error']:
-            lcd_ctrl("INVALID WORKORDER!", 'red')
-            if DEBUG:
-                print("Invalid Workorder!  (data = error)")
-            sleep(2)  # Pause so the user can read the error.
-            run_or_exit_program('run')
-    except:
-        pass
+    if data['error']:
+        lcd_ctrl("INVALID WORKORDER!", 'red')
+        if DEBUG:
+            print("Invalid Workorder!  (data = error)")
+        sleep(2)  # Pause so the user can read the error.
+        run_or_exit_program('run')
+
     try:
         press_from_api_wo = data['press']
         rmat_from_api_wo = data['rmat']
         return press_from_api_wo, rmat_from_api_wo
     except:
-        pass
+        if DEBUG:
+            print("No data from API!")
 
 
 def serial_api_request(sn):
@@ -171,19 +169,18 @@ def serial_api_request(sn):
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
 
-    try:
-        if data['error']:
-            lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
-            if DEBUG:
-                print("Invalid Serial Number! (data = error)")
-            sleep(2)  # Pause so the user can read the error.
-            run_or_exit_program('run')
-    except:
-        pass
+    if data['error']:
+        lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
+        if DEBUG:
+            print("Invalid Serial Number! (data = error)")
+        sleep(2)  # Pause so the user can read the error.
+        run_or_exit_program('run')
+
     try:
         rmat_from_api = data['itemno']
     except:
-        pass
+        if DEBUG:
+            print("No data from API!")
     return rmat_from_api
 
 
