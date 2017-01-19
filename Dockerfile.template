@@ -27,8 +27,7 @@ COPY ./requirements.txt /requirements.txt
 RUN pip3 install -r /requirements.txt
 
 # Copy needed files in our root to the working directory
-COPY ./loader-controller.py /loader-controller.py
-COPY ./start.sh /start.sh
+COPY . ./
 
 # Create non-root user - Reference
 # RUN useradd --user-group --shell /bin/false resin
