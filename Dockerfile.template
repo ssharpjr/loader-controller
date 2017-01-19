@@ -14,12 +14,13 @@ ENV INITSYSTEM on
 #    rm -rr /var/lib/apt/lists/*
 
 # Setup Repositories
-RUN mkdir src && cd src && \
-    git clone https://github.com/adafruit/Adafruit_Python_GPIO && \
+RUN git clone https://github.com/adafruit/Adafruit_Python_GPIO && \
     cd Adafruit_Python_GPIO && python3 setup.py install && \
+    cd ../ && \
     git clone https://github.com/adafruit/Adafruit_Python_CharLCD && \
     cd ../Adafruit_Python_CharLCD && python3 setup.py install && \
-    cd .. && rm -rf /src/Adafruit_Python_CharLCD && rm -rf /src/Adafruit_Python_GPIO
+    cd ../ &&
+    rm -rf Adafruit_Python_CharLCD && rm -rf Adafruit_Python_GPIO
 
 # Copy and Install Requirements
 COPY ./requirements.txt /requirements.txt
