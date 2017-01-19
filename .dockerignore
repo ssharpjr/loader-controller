@@ -1,0 +1,14 @@
+# files and folders for docker to ignore
+
+# Folders
+deploy/
+examples/
+test/
+
+# Files
+__init__.py
+LICENSE
+README.md
+ProjectNotes.md
+release_notes.txt
+version.txt
