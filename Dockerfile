@@ -1,3 +1,4 @@
+# Dockerfile for loader-controller
 FROM resin/%%RESIN_MACHINE_NAME%%-python:3.5
 
 # Install Packages
@@ -14,10 +15,6 @@ RUN python3 setup.py install
 RUN cd ../Adafruit_Python_GPIO
 RUN python3 setup.py install
 
-# Activate Modules
-RUN echo 'i2c-bcm2708 >> /etc/modules'
-RUN echo 'i2c-dev >> /etc/modules'
-
 # Set working directory
 WORKDIR = /home/pi/loader-controller
 
@@ -31,6 +28,6 @@ COPY . ./
 # Switch on systemd in container
 ENV INITSYSTEM on
 
-# Start the application on startup
-CMD ["python3","loader-controller.py"]
+# Activate I2C and start the application on startup
+CMD modprobe i2c-dev && python3 loader-controller.py
 
