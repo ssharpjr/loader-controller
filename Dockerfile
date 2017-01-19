@@ -1,5 +1,5 @@
 # Dockerfile for loader-controller
-FROM resin/%%RESIN_MACHINE_NAME%%-python:3.5
+FROM resin/raspberrypi3-python:3.5
 
 # Install Packages
 RUN apt-get update && apt-get install -y build-essential python3-dev \
