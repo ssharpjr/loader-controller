@@ -16,10 +16,10 @@ ENV INITSYSTEM on
 # Setup Repositories
 RUN mkdir src && cd src && \
     git clone https://github.com/adafruit/Adafruit_Python_GPIO && \
-    cd ../Adafruit_Python_GPIO && python3 setup.py install && \
+    cd Adafruit_Python_GPIO && python3 setup.py install && \
     git clone https://github.com/adafruit/Adafruit_Python_CharLCD && \
-    cd Adafruit_Python_CharLCD && python3 setup.py install && \
-    cd .. && rm -rf Adafruit_Python_CharLCD && rm -rf Adafruit_Python_GPIO
+    cd ../Adafruit_Python_CharLCD && python3 setup.py install && \
+    cd .. && rm -rf /src/Adafruit_Python_CharLCD && rm -rf /src/Adafruit_Python_GPIO
 
 # Copy and Install Requirements
 COPY ./requirements.txt /requirements.txt
