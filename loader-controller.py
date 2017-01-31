@@ -26,12 +26,8 @@
 # SOFTWARE.
 ###############################################################################
 
-# TODO: wo_monitor()
-#       Periodically check if the captured work order is still current in RT.
-# TODO: Setup the Gaylord switch.
 # TODO: Pull PRESS_ID from /boot/pressid.txt. This will allow for better
 #       replication to other presses.
-# TODO: Make the OS Read Only
 # TODO: Implement logging
 
 
@@ -104,6 +100,7 @@ def lcd_ctrl(msg, color, clear=True):
     # Send instructions to the LCD.
     # Colors are Red, Green, Blue values.
     # all zeros equals off, all ones equals white
+    # TODO: Use dict()
     color = color
     if clear:
         lcd.clear()
@@ -135,6 +132,30 @@ def get_wo_scan():
     lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
     wo_scan = input("Scan Workorder: ")
     return wo_scan
+
+
+def press_api_request(PRESS_ID, wo_id_from_wo):
+    # Check if the work order number changes.
+    if DEBUG:
+        print("Checking API for work order changes")
+    url = api_url + '/press/' + PRESS_ID
+    resp = requests.get(url=url, timeout=10)
+    data = json.loads(resp.text)
+
+    if data['error']:
+        lcd_ctrl("WORK ORDER CHANGED!\n\nRESTARTING", 'red')
+        if DEBUG:
+            print("Work order changed! (data = error)")
+        sleep(2)  # Pause so the user can read the error.
+        run_or_exit_program('run')
+
+    wo_id_from_api = data['wo_id']
+
+    if wo_id_from_wo != wo_id_from_api:
+        lcd_ctrl("WORK ORDER CHANGED!\n\nRESTARTING", 'red')
+        if DEBUG:
+            print("Work orders do not match.  Restarting")
+        run_or_exit_program('run')
 
 
 def wo_api_request(wo_id):
@@ -203,30 +224,6 @@ def get_rmat_scan():
         run_or_exit_program('run')
     rmat_scan = rmat_scan[1:]  # Strip off the "S" Qualifier.
     return rmat_scan
-
-
-def press_api(PRESS_ID, wo_id_from_wo):
-    # Check if the work order number changes.
-    if DEBUG:
-        print("Checking API for work order changes")
-    url = api_url + '/press/' + PRESS_ID
-    resp = requests.get(url=url, timeout=10)
-    data = json.loads(resp.text)
-
-    if data['error']:
-        lcd_ctrl("WORK ORDER CHANGED!\n\nRESTARTING", 'red')
-        if DEBUG:
-            print("Work order changed! (data = error)")
-        sleep(2)  # Pause so the user can read the error.
-        run_or_exit_program('run')
-
-    wo_id_from_api = data['wo_id']
-
-    if wo_id_from_wo != wo_id_from_api:
-        lcd_ctrl("WORK ORDER CHANGED!\n\nRESTARTING", 'red')
-        if DEBUG:
-            print("Work orders do not match.  Restarting")
-        run_or_exit_program('run')
 
 
 def sensor_monitor():
@@ -308,7 +305,7 @@ def run_mode():
         if c % 10 == 0:  # Check the sensor every 10 seconds
             sensor_monitor()
         if c % 300 == 0:  # Check the API every 5 minutes
-            press_api(PRESS_ID, wo_id_from_wo)
+            press_api_request(PRESS_ID, wo_id_from_wo)
             c = 0  # Reset counter when 300 is hit
 
 
@@ -343,7 +340,9 @@ def main():
         print("Requesting data from API")
 
     try:
-        press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
+        # press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
+        press_from_api_wo, rmat_from_api_wo = press_api_request(PRESS_ID,
+                                                                wo_is_from_wo)
     except:
         network_fail()
 
