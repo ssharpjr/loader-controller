@@ -205,36 +205,33 @@ def get_rmat_scan():
     return rmat_scan
 
 
-def wo_monitor(wo_id_from_wo):
-    # Check if the workorder number changes (RT workorder unloaded).
+def press_api(PRESS_ID, wo_id_from_wo):
+    # Check if the work order number changes.
     if DEBUG:
-        print("Checking loaded workorder")
-    wo_id = wo_id_from_wo
-    url = api_url + '/wo_monitor/' + wo_id
+        print("Checking API for work order changes")
+    url = api_url + '/press/' + PRESS_ID
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
 
-    try:
-        if data['error']:
-            lcd_ctrl("WORKORDER CHANGED!\n\nRESTARTING", 'red')
-            if DEBUG:
-                print("Workorder changed! (data = error)")
-            sleep(2)  # Pause so the user can read the error.
-            run_or_exit_program('run')
-    except:
-        pass
-    try:
-        wo_id_from_api = data['wo_id']
-    except:
-        pass
+    if data['error']:
+        lcd_ctrl("WORK ORDER CHANGED!\n\nRESTARTING", 'red')
+        if DEBUG:
+            print("Work order changed! (data = error)")
+        sleep(2)  # Pause so the user can read the error.
+        run_or_exit_program('run')
+
+    wo_id_from_api = data['wo_id']
 
     if wo_id_from_wo != wo_id_from_api:
+        lcd_ctrl("WORK ORDER CHANGED!\n\nRESTARTING", 'red')
         if DEBUG:
-            print("Workorders do not match.  Restarting")
+            print("Work orders do not match.  Restarting")
         run_or_exit_program('run')
 
 
 def sensor_monitor():
+    # Check to see if the IR beam is broken (0).
+    # A broken beam means there is pallet present; good to run.
     if IO.input(ir_pin) == 1:
         if DEBUG:
             print("Sensor detected.  Pallet moved")
@@ -301,22 +298,24 @@ def rst_btn_cb(channel):
 
 def run_mode():
     # Run a timed loop, checking the IR sensor and API
+    if DEBUG:
+        print("run_mode() running")
+
     c = 0  # Reset counter
     while True:
-        if c == 10:  # Check the sensor every 10 seconds
-            sensor_monitor()
-        if c == 300:  # Check the API every 5 minutes
-            wo_monitor(wo_id_from_wo)
-            c = 0  # Reset counter when 300 is hit
-
         c = c + 1
         sleep(1)
+        if c % 10 == 0:  # Check the sensor every 10 seconds
+            sensor_monitor()
+        if c % 300 == 0:  # Check the API every 5 minutes
+            press_api(PRESS_ID, wo_id_from_wo)
+            c = 0  # Reset counter when 300 is hit
 
 
 ###############################################################################
 # Interrupts
 # If the reset button is pressed, restart the program
-IO.add_event_detect(rst_btn, IO.RISING, callback=rst_btn_cb, bouncetime=300)
+# IO.add_event_detect(rst_btn, IO.RISING, callback=rst_btn_cb, bouncetime=300)
 ###############################################################################
 
 
