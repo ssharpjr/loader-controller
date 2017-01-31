@@ -149,13 +149,12 @@ def press_api_request(PRESS_ID, wo_id_from_wo):
         sleep(2)  # Pause so the user can read the error.
         run_or_exit_program('run')
 
-    wo_id_from_api = data['wo_id']
-
-    if wo_id_from_wo != wo_id_from_api:
-        lcd_ctrl("WORK ORDER CHANGED!\n\nRESTARTING", 'red')
+    try:
+        wo_id_from_api = data['wo_id']
+        return wo_id_from_api
+    except:
         if DEBUG:
-            print("Work orders do not match.  Restarting")
-        run_or_exit_program('run')
+            print("No data from API!")
 
 
 def wo_api_request(wo_id):
@@ -235,6 +234,15 @@ def sensor_monitor():
         run_or_exit_program('run')
 
 
+def wo_monitor():
+    wo_id_from_api = press_api_request(PRESS_ID, wo_id_from_wo)
+    if wo_id_from_api != wo_id_from_wo:
+        if DEBUG:
+            print("Work order changed! (work orders do not match)")
+        lcd_ctrl("WORK ORDER\nCHANGED\n\nRESTARTING", 'red')
+        run_or_exit_program('run')
+
+
 def start_loader():
     if DEBUG:
         print("\nEnergizing Loader")
@@ -305,7 +313,7 @@ def run_mode():
         if c % 10 == 0:  # Check the sensor every 10 seconds
             sensor_monitor()
         if c % 300 == 0:  # Check the API every 5 minutes
-            press_api_request(PRESS_ID, wo_id_from_wo)
+            wo_monitor()
             c = 0  # Reset counter when 300 is hit
 
 
@@ -340,9 +348,7 @@ def main():
         print("Requesting data from API")
 
     try:
-        # press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
-        press_from_api_wo, rmat_from_api_wo = press_api_request(PRESS_ID,
-                                                                wo_is_from_wo)
+        press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
     except:
         network_fail()
 
