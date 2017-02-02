@@ -30,16 +30,93 @@
 #       replication to other presses.
 # TODO: Implement logging
 
+
 import os
 import sys
+import requests
+from time import sleep
+import json
 
-from iqapi import *
-from lcdmcp import *
+import Adafruit_CharLCD as LCD
+import Adafruit_GPIO.MCP230xx as MCP
+import RPi.GPIO as IO  # For standard GPIO methods.
 
 
 # CONSTANTS
 DEBUG = True
 PRESS_ID = '136'  # This does not change!
+
+
+# Variables
+api_url = 'http://10.130.0.42'  # Web API URL
+
+
+###############################################################################
+# GPIO Setup
+###############################################################################
+rst_btn = 18  # INPUT - Manually restart the program.
+ir_pin  = 23  # INPUT - Reads the IR sensor state.
+ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay.
+
+IO.setmode(IO.BCM)
+IO.setup(ssr_pin, IO.OUT, initial=0)
+
+# Wire IR sensor from PIN to GND. Default state = False.
+# The edge will RISE when a signal is present.
+IO.setup(ir_pin, IO.IN, pull_up_down=IO.PUD_UP)
+
+# Wire the restart button from PIN to 3V3.  Default state = True.
+# The edge will FALL when pressed.
+IO.setup(rst_btn, IO.IN, pull_up_down=IO.PUD_DOWN)
+
+###############################################################################
+# Setup the LCD and MCP.
+###############################################################################
+# Define the MCP pins connected to the LCD.
+# Note: These are MCP pins, not RPI pins.
+lcd_rs = 0
+lcd_en = 1
+lcd_d4 = 2
+lcd_d5 = 3
+lcd_d6 = 4
+lcd_d7 = 5
+lcd_red = 6
+lcd_green = 7
+lcd_blue = 8
+lcd_columns = 20
+lcd_rows = 4
+
+# Initialize MCP23017 device using its default 0x20 I2C address.
+gpio = MCP.MCP23017()
+
+# Initialize the LCD using the pins.
+lcd = LCD.Adafruit_RGBCharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7,
+                              lcd_columns, lcd_rows, lcd_red, lcd_green,
+                              lcd_blue, gpio=gpio)
+###############################################################################
+
+
+def lcd_ctrl(msg, color, clear=True):
+    # Send instructions to the LCD.
+    # Colors are Red, Green, Blue values.
+    # all zeros equals off, all ones equals white
+    # TODO: Use dict()
+    color = color
+    if clear:
+        lcd.clear()
+    if color == 'red':
+        lcd.set_color(1.0, 0.0, 0.0)  # Red
+    elif color == 'green':
+        lcd.set_color(0.0, 1.0, 0.0)  # Green
+    elif color == 'blue':
+        lcd.set_color(0.0, 0.0, 1.0)  # Blue
+    elif color == 'white':
+        lcd.set_color(1.0, 1.0, 1.0)  # White
+    elif color == 'off':
+        lcd.set_color(0.0, 0.0, 0.0)  # Off
+    else:
+        lcd.set_color(0.0, 0.0, 0.0)  # Off
+    lcd.message(msg)
 
 
 def network_fail():
@@ -55,6 +132,76 @@ def get_wo_scan():
     lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
     wo_scan = input("Scan Workorder: ")
     return wo_scan
+
+
+def press_api_request(PRESS_ID, wo_id_from_wo):
+    # Check if the work order number changes.
+    if DEBUG:
+        print("Checking API for work order changes")
+    url = api_url + '/press/' + PRESS_ID
+    resp = requests.get(url=url, timeout=10)
+    data = json.loads(resp.text)
+
+    if data['error']:
+        lcd_ctrl("WORK ORDER CHANGED!\n\nRESTARTING", 'red')
+        if DEBUG:
+            print("Work order changed! (data = error)")
+        sleep(2)  # Pause so the user can read the error.
+        run_or_exit_program('run')
+
+    try:
+        wo_id_from_api = data['wo_id']
+        return wo_id_from_api
+    except:
+        if DEBUG:
+            print("No data from API!")
+
+
+def wo_api_request(wo_id):
+    # Notify user of potential pause
+    lcd_ctrl("GETTING\nWORKORDER\nINFORMATION...", 'blue')
+
+    url = api_url + '/wo/' + wo_id
+    resp = requests.get(url=url, timeout=10)
+    data = json.loads(resp.text)
+
+    if data['error']:
+        lcd_ctrl("INVALID WORKORDER!", 'red')
+        if DEBUG:
+            print("Invalid Workorder!  (data = error)")
+        sleep(2)  # Pause so the user can read the error.
+        run_or_exit_program('run')
+
+    try:
+        press_from_api_wo = data['press']
+        rmat_from_api_wo = data['rmat']
+        return press_from_api_wo, rmat_from_api_wo
+    except:
+        if DEBUG:
+            print("No data from API!")
+
+
+def serial_api_request(sn):
+    # Notify user of the potential pause
+    lcd_ctrl("GETTING\nRAW MATERIAL\nSERIAL NUMBER\nINFORMATION...", 'blue')
+
+    url = api_url + '/serial/' + sn
+    resp = requests.get(url=url, timeout=10)
+    data = json.loads(resp.text)
+
+    if data['error']:
+        lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
+        if DEBUG:
+            print("Invalid Serial Number! (data = error)")
+        sleep(2)  # Pause so the user can read the error.
+        run_or_exit_program('run')
+
+    try:
+        rmat_from_api = data['itemno']
+    except:
+        if DEBUG:
+            print("No data from API!")
+    return rmat_from_api
 
 
 def get_rmat_scan():
@@ -76,13 +223,6 @@ def get_rmat_scan():
         run_or_exit_program('run')
     rmat_scan = rmat_scan[1:]  # Strip off the "S" Qualifier.
     return rmat_scan
-
-
-def get_wo_from_api(press_id, wo_scan):
-    # Get API data
-    press_id_from_api, wo_id_from_api, itemno, descrip,\
-            itemno_mat, descrip_mat = press_api_request(press_id)
-    return wo_id_from_api
 
 
 def sensor_monitor():
