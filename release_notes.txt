@@ -1,7 +1,7 @@
 v1.0:
   * Initial release.  First deployed version.
 v1.1
-  * Added pallet sensor feature.  This monitors an infrared sensor to detect the presence of a pallet.  
+  * Added pallet sensor feature.  This monitors an infrared sensor to detect the presence of a pallet.
     If the pallet is missing, the loader will not function.
   * Added the Workorder monitor feature.  This monitors the currently running workorder and restarts the program if it changes.
   * Renamed loader_controller.py to make it easier to import.
