@@ -129,7 +129,8 @@ def network_fail():
 
 
 def get_wo_scan():
-    lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
+    if lcd_ctrl:
+        lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
     wo_scan = input("Scan Workorder: ")
     return wo_scan
 

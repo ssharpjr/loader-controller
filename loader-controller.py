@@ -217,29 +217,40 @@ def wo_monitor(PRESS_ID, wo_id_from_wo):
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
 
-    if data['error']:
-        lcd_ctrl("WORKORDER CHANGED!\n\nRESTARTING", 'red')
-        if DEBUG:
-            print("Workorder changed! (data = error)")
-        sleep(2)  # Pause so the user can read the error.
-        run_or_exit_program('run')
-
+#    if data['error']:
+#        lcd_ctrl("WORKORDER CHANGED!\n\nRESTARTING", 'red')
+#        if DEBUG:
+#            print("Workorder changed! (data = error)")
+#        sleep(2)  # Pause so the user can read the error.
+#        run_or_exit_program('run')
+#
     try:
         press_id_from_api = data['press_id']
         wo_id_from_api = data['wo_id']
         itemno_from_api = data['itemno']
         descrip_from_api = data['descrip']
         itemno_mat_from_api = data['itemno_mat']
-        descrip_mat_from_api = data['descip_mat']
+        descrip_mat_from_api = data['descrip_mat']
+        if DEBUG:
+            print("WO from API: " + wo_id_from_api)
     except:
         if DEBUG:
-            print("API Data imcomplete")
-            print(data)
+            print("\nAPI Data incomplete")
+            print(press_id_from_api)
+            print(wo_id_from_api)
+            print(itemno_from_api)
+            print(descrip_from_api)
+            print(itemno_mat_from_api)
+            print(descrip_mat_from_api)
+            print("\n")
 
     if wo_id_from_wo != wo_id_from_api:
         if DEBUG:
             print("Workorders do not match.  Restarting")
         run_or_exit_program('run')
+    else:
+        if DEBUG:
+            print("WO looks good, restarting run_mode() loop")
 
 
 def sensor_monitor():
@@ -311,21 +322,26 @@ def rst_btn_cb(channel):
     restart_program()
 
 
-def run_mode():
+def run_mode(PRESS_ID, wo_id_from_wo):
     # Run a timed loop, checking the IR sensor and API
-    print("run_mode() running")
+    if DEBUG:
+        print("run_mode() running")
     c = 0  # Reset counter
     while True:
         print("Counter: " + str(c))
         c = c + 1
         sleep(1)
         if c % 10 == 0:  # Check the sensor every 10 seconds
-            print("Counter hit 10")
+            if DEBUG:
+                print("Counter hit 10")
             sensor_monitor()
-        if c % 60 == 0:  # Check the API every 5 minutes
-            print("Counter hit 60")
+        if c % 30 == 0:  # Check the API every 5 minutes
+            if DEBUG:
+                print("Counter hit 60")
+            wo_monitor(PRESS_ID, wo_id_from_wo)
+            if DEBUG:
+                print("Resetting run_mode() counter")
             c = 0  # Reset counter
-            wo_monitor(wo_id_from_wo)
 
 
 ###############################################################################
@@ -409,7 +425,7 @@ def main():
         start_loader()  # Looks good, turn on the loader.
         lcd_msg = "PRESS: " + PRESS_ID + "\nWORKORDER: " + wo_id_from_wo + "\n\nLOADER RUNNING"
         lcd_ctrl(lcd_msg, 'green')
-        run_mode()   # Start the monitors
+        run_mode(PRESS_ID, wo_id_from_wo)   # Start the monitors
     else:
         if DEBUG:
             print("Invalid Material!")
@@ -426,7 +442,9 @@ def run():
             run_or_exit_program('exit')
         except:
             # stop_loader()
-            print("GPIO Cleanup")
+            if DEBUG:
+                print("main() try failed")
+                print("GPIO Cleanup")
             IO.cleanup()
 
 
