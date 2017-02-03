@@ -10,6 +10,19 @@ import json
 api_url = 'http://10.130.0.42'  # Web API URL
 
 
+def wo_id_api_request(press_id):
+    url = api_url + '/press/' + press_id
+    resp = requests.get(url=url, timeout=10)
+    data = json.loads(resp.text)
+
+    try:
+        wo_id = data['wo_id']
+        return wo_id
+    except:
+        print("\nAPI Data is incomplete")
+        print(data)
+
+
 def press_api_request(press_id):
     url = api_url + '/press/' + press_id
     resp = requests.get(url=url, timeout=10)

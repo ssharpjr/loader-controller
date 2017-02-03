@@ -208,29 +208,33 @@ def get_rmat_scan():
     return rmat_scan
 
 
-def wo_monitor(wo_id_from_wo):
+def wo_monitor(PRESS_ID, wo_id_from_wo):
     # Check if the workorder number changes (RT workorder unloaded).
-    print("wo_monitor() running")
     if DEBUG:
         print("Checking loaded workorder")
     wo_id = wo_id_from_wo
-    url = api_url + '/wo_monitor/' + wo_id
+    url = api_url + '/press/' + PRESS_ID
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
 
+    if data['error']:
+        lcd_ctrl("WORKORDER CHANGED!\n\nRESTARTING", 'red')
+        if DEBUG:
+            print("Workorder changed! (data = error)")
+        sleep(2)  # Pause so the user can read the error.
+        run_or_exit_program('run')
+
     try:
-        if data['error']:
-            lcd_ctrl("WORKORDER CHANGED!\n\nRESTARTING", 'red')
-            if DEBUG:
-                print("Workorder changed! (data = error)")
-            sleep(2)  # Pause so the user can read the error.
-            run_or_exit_program('run')
-    except:
-        pass
-    try:
+        press_id_from_api = data['press_id']
         wo_id_from_api = data['wo_id']
+        itemno_from_api = data['itemno']
+        descrip_from_api = data['descrip']
+        itemno_mat_from_api = data['itemno_mat']
+        descrip_mat_from_api = data['descip_mat']
     except:
-        pass
+        if DEBUG:
+            print("API Data imcomplete")
+            print(data)
 
     if wo_id_from_wo != wo_id_from_api:
         if DEBUG:

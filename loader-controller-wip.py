@@ -45,14 +45,16 @@ PRESS_ID = '136'  # This does not change!
 def network_fail():
     if DEBUG:
         print("Failed to get data from API")
-        print("System will restart in 10 seconds.")
-    lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\nRestarting...", 'red')
+        print("System will restart in 5 seconds.")
+    if lcd_ctrl:
+        lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\nRestarting...", 'red')
     sleep(5)
     run_or_exit_program('run')
 
 
 def get_wo_scan():
-    lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
+    if lcd_ctrl:
+        lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
     wo_scan = input("Scan Workorder: ")
     return wo_scan
 
@@ -60,16 +62,15 @@ def get_wo_scan():
 def get_rmat_scan():
     # Get the Raw Material Serial Number.
     # Check for the "S" qualifier.
-    # Strip the qualifier is present and return the serial number.
-    lcd_ctrl("SCAN\nRAW MATERIAL\nSERIAL NUMBER", 'white')
-    # rmat_scan = 'S07234585' for test.
+    # Strip the qualifier if present and return the serial number.
+    if lcd_ctrl:
+        lcd_ctrl("SCAN\nRAW MATERIAL\nSERIAL NUMBER", 'white')
     rmat_scan = ''
     if DEBUG:
         rmat_scan = str(input("Scan Raw Material Serial Number: "))
-    else:
-        rmat_scan = str(input())
     if not rmat_scan.startswith('S'):
-        lcd_ctrl("NOT A VALID\nSERIAL NUMBER!", 'red')
+        if lcd_ctrl:
+            lcd_ctrl("NOT A VALID\nSERIAL NUMBER!", 'red')
         if DEBUG:
             print("Not a Serial Number! (missing \"S\" qualifier)")
         sleep(2)  # Pause so the user can read the error.
@@ -78,11 +79,24 @@ def get_rmat_scan():
     return rmat_scan
 
 
-def get_wo_from_api(press_id, wo_scan):
+def get_wo_id_from_api(press_id):
     # Get API data
-    press_id_from_api, wo_id_from_api, itemno, descrip,\
-            itemno_mat, descrip_mat = press_api_request(press_id)
+    wo_id_from_api = wo_id_api_request(press_id)
     return wo_id_from_api
+
+
+def compare_press_id(PRESS_ID):
+    pass
+
+
+def compare_wo_id(wo_scan, wo_id_from_api, PRESS_ID):
+    press_id = PRESS_ID
+
+    # Notify user of potential pause
+    if lcd_ctrl:
+        lcd_ctrl("GETTING\nWORK ORDER\nINFORMATION...", 'blue')
+    wo_id_from_wo = get_wo_scan()
+    wo_id_from_api = get_wo_id_from_api(press_id)
 
 
 def sensor_monitor():
@@ -189,82 +203,45 @@ def run_mode():
 ###############################################################################
 
 def main():
+    # Begin
     print()
     print("Starting Loader Controller Program")
     print("For Press " + PRESS_ID)
-    lcd_msg ="LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
-    lcd_ctrl(lcd_msg, 'white')
+    if lcd_ctrl:
+        lcd_msg ="LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
+        lcd_ctrl(lcd_msg, 'white')
     sleep(1)
 
 
-    # Request the Workorder Number (ID) Barcode.
-    wo_id_from_wo = get_wo_scan()
-    if DEBUG:
-        print("Scanned Work Order: " + wo_id_from_wo)
+    # TODO: Complete Process Flow.
 
+    # Scan the Workorder Number (ID) Barcode.
+    get_wo_id_from_scan()
 
-    # Request Press Number and Raw Material Item Number from the API.
-    if DEBUG:
-        print("Requesting data from API")
+    # Request Press info from API using PRESS_ID.
+    get_press_api_data(PRESS_ID)
 
-    try:
-        press_from_api_wo, rmat_from_api_wo = wo_api_request(wo_id_from_wo)
-    except:
-        network_fail()
+    # Verify the Press Number using PRESS_ID.
+    compare_press_id(press_id)
 
-
-    if DEBUG:
-        print("Press Number from API: " + press_from_api_wo)
-        print("RM Item Number from API: " + rmat_from_api_wo)
-
-
-    # Verify the Press Number.
-    if DEBUG:
-        print("Checking if workorder is currently running on this press...")
-    if press_from_api_wo == PRESS_ID:
-        if DEBUG:
-            print("Match.  Workorder: " + wo_id_from_wo +
-                  " is running on Press #" + PRESS_ID)
-            print("Good Workorder.  Continuing...")
-    else:
-        lcd_ctrl("INCORRECT\nWORKORDER!", 'red')
-        if DEBUG:
-            print("Incorrect Workorder!")
-            print("This Workorder is for press: " + press_from_api_wo)
-        sleep(2)  # Pause so the user can see the error.
-        run_or_exit_program('run')
-
+    # Verify the Work Order Number using PRESS_ID, wo_id_from_scan.
+    compare_wo_id(PRESS_ID, wo_id_from_scan)
 
     # Scan the Raw Material Serial Number Barcode.
-    serial_from_label = get_rmat_scan()
-    if DEBUG:
-        print("Serial Number from Label: " + serial_from_label)
+    get_serial_number_from_scan()
 
-
-    # Request Raw Material Item Number from the API.
-    rmat_from_api_inv = serial_api_request(serial_from_label)
-    if DEBUG:
-      print("RM Item Number from API: " + rmat_from_api_inv)
-
+    # Request Raw Material Item Number from the API using serial_from_scan.
+    get_itemno_mat_from_serial_api(serial_from_scan)
 
     # Verify the Raw Material Item Number.
-    if DEBUG:
-        print("Checking if raw material matches this workorder...")
-    if rmat_from_api_wo == rmat_from_api_inv:
-        if DEBUG:
-            print("Material matches workorder.  Continuing...")
-            print("Starting the Loader!")
+    # Using itemno_mat_from_press_api, itemno_mat_from_serial_api
+    compare_rmat_itemno(itemno_mat_from_press_api, itemno_mat_from_serial_api)
 
-        start_loader()  # Looks good, turn on the loader.
-        lcd_msg = "PRESS: " + PRESS_ID + "\nWORKORDER: " + wo_id_from_wo + "\n\nLOADER RUNNING"
-        lcd_ctrl(lcd_msg, 'green')
-        run_mode()   # Start the monitors
-    else:
-        if DEBUG:
-            print("Invalid Material!")
-        lcd_ctrl("INCORRECT\nMATERIAL!", 'red')
-        sleep(2)  # Pause so the user can see the error.
-        run_or_exit_program('run')
+    # Energize the loader.
+    start_loader()
+
+    # Execute run_mode() function.
+    run_mode()
 
 
 def run():
