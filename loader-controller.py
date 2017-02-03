@@ -192,12 +192,7 @@ def get_rmat_scan():
     # Check for the "S" qualifier.
     # Strip the qualifier is present and return the serial number.
     lcd_ctrl("SCAN\nRAW MATERIAL\nSERIAL NUMBER", 'white')
-    # rmat_scan = 'S07234585' for test.
-    rmat_scan = ''
-    if DEBUG:
-        rmat_scan = str(input("Scan Raw Material Serial Number: "))
-    else:
-        rmat_scan = str(input())
+    rmat_scan = str(input("Scan Raw Material Serial Number: "))
     if not rmat_scan.startswith('S'):
         lcd_ctrl("NOT A VALID\nSERIAL NUMBER!", 'red')
         if DEBUG:
@@ -256,26 +251,32 @@ def wo_monitor(PRESS_ID, wo_id_from_wo):
 def sensor_monitor():
     # Check to see if the IR beam is broken (0).
     # A broken beam means there is a pallet present.
-    print("sensor_monitor() running")
+    if DEBUG == 2:
+        print("sensor_monitor() running")
     if IO.input(ir_pin) == 1:
         if DEBUG:
             print("Sensor detected.  Pallet moved")
+        if lcd_ctrl:
+            lcd_ctrl("NO PALLET DETECTED\n\nRESTARTING", 'red')
+            sleep(2)
         run_or_exit_program('run')
     return
 
 def sensor_startup_check():
     # Check the pallet sensor on startup.
     # Keep checking until it is present.
-    print("Checking Pallet Sensor")
-    if IO.input(ir_pin) == 1:
-        if DEBUG:
-            print("No pallet detected.")
-        if lcd_ctrl:
-            lcd_ctrl("NO PALLET DETECTED!\n\nCHECKING AGAIN\nIN 10 SECS", 'red')
-        sleep(10)
-    else:
-        if lcd_ctrl:
-            lcd_ctrl("PALLET DETECTED\n\nCONTINUING", 'green')
+    if DEBUG:
+        print("Checking Pallet Sensor")
+    while IO.input(ir_pin) == 1:
+        if IO.input(ir_pin) == 1:
+            if DEBUG == 2:
+                print("No pallet detected.")
+            if lcd_ctrl:
+                lcd_ctrl("NO PALLET DETECTED!\n\nCHECKING AGAIN\nIN 10 SECS", 'red')
+            sleep(10)
+    if lcd_ctrl:
+        lcd_ctrl("PALLET DETECTED\n\nCONTINUING", 'white')
+        sleep(2)
 
 
 def start_loader():
@@ -338,19 +339,20 @@ def rst_btn_cb(channel):
 
 def run_mode(PRESS_ID, wo_id_from_wo):
     # Run a timed loop, checking the IR sensor and API
-    if DEBUG:
+    if DEBUG == 2:
         print("run_mode() running")
     c = 0  # Reset counter
     while True:
-        print("Counter: " + str(c))
+        if DEBUG == 2:
+            print("Counter: " + str(c))
         c = c + 1
         sleep(1)
         if c % 10 == 0:  # Check the sensor every 10 seconds
-            if DEBUG:
+            if DEBUG == 2:
                 print("Counter hit 10")
             sensor_monitor()
-        if c % 30 == 0:  # Check the API every 5 minutes
-            if DEBUG:
+        if c % 300 == 0:  # Check the API every 5 minutes
+            if DEBUG == 2:
                 print("Counter hit 60")
             wo_monitor(PRESS_ID, wo_id_from_wo)
             if DEBUG:
@@ -375,7 +377,8 @@ def main():
     print("For Press " + PRESS_ID)
     lcd_msg ="LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
     lcd_ctrl(lcd_msg, 'white')
-    sleep(1)
+    sleep(2)
+
 
     # Check if the Pallet Sensor is open (a Pallet is present).
     sensor_startup_check()
