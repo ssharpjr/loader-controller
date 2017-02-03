@@ -263,6 +263,20 @@ def sensor_monitor():
         run_or_exit_program('run')
     return
 
+def sensor_startup_check():
+    # Check the pallet sensor on startup.
+    # Keep checking until it is present.
+    print("Checking Pallet Sensor")
+    if IO.input(ir_pin) == 1:
+        if DEBUG:
+            print("No pallet detected.")
+        if lcd_ctrl:
+            lcd_ctrl("NO PALLET DETECTED!\n\nCHECKING AGAIN\nIN 10 SECS", 'red')
+        sleep(10)
+    else:
+        if lcd_ctrl:
+            lcd_ctrl("PALLET DETECTED\n\nCONTINUING", 'green')
+
 
 def start_loader():
     if DEBUG:
@@ -363,6 +377,8 @@ def main():
     lcd_ctrl(lcd_msg, 'white')
     sleep(1)
 
+    # Check if the Pallet Sensor is open (a Pallet is present).
+    sensor_startup_check()
 
     # Request the Workorder Number (ID) Barcode.
     wo_id_from_wo = get_wo_scan()
