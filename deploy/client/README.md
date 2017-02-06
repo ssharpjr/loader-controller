@@ -3,6 +3,7 @@
 
 ## Raspberry Pi Initial Configuration
 ##### Raspi-Config
+Using a Raspberry Pi3 running Raspian Jessie Lite 01-11-2017
 Run
 ```shell
 sudo raspi-config
@@ -80,5 +81,36 @@ cd Adafruit_Python_CharLCD && sudo python3 setup.py install
 sudo adduser USERNAME
 sudo usermod -G adm,dialout,cdrom,sudo,audio,video,plugdev,games,users,input,\
      netdev,spi,i2c,gpio -a USERNAME
+```
+
+##### Setup Autologin
+Create a systemd startup file
+```shell
+sudo vi /etc/systemd/system/getty@tty1.service.d/autologin.conf
+```
+
+Enter the following:
+```shell
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin pi --noclear %I 38400 linux
+```
+
+Start the service
+```shell
+sudo systemctl enable getty@tty1.service
+```
+
+##### Setup AutoStart Script
+Edit the .bashrc for pi
+```shell
+vi /home/pi/.bashrc
+```
+
+Enter the following at the end of the file:
+```shell
+# Run Loader Controller
+cd loader-controller
+python3 loader-controller.py
 ```
 
