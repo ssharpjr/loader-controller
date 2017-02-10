@@ -14,8 +14,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -44,7 +44,7 @@ import RPi.GPIO as IO  # For standard GPIO methods.
 
 
 # CONSTANTS
-DEBUG = True
+DEBUG = 2
 PRESS_ID = '136'  # This does not change!
 
 
@@ -54,7 +54,7 @@ api_url = 'http://10.130.0.42'  # Web API URL
 
 # GPIO Setup
 rst_btn = 18  # INPUT - Manually restart the program.
-ir_pin  = 23  # INPUT - Reads the IR sensor state.
+ir_pin = 23  # INPUT - Reads the IR sensor state.
 ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay.
 
 IO.setmode(IO.BCM)
@@ -268,12 +268,12 @@ def sensor_startup_check():
     if DEBUG:
         print("Checking Pallet Sensor")
     while IO.input(ir_pin) == 1:
-        if IO.input(ir_pin) == 1:
-            if DEBUG == 2:
-                print("No pallet detected.")
-            if lcd_ctrl:
-                lcd_ctrl("NO PALLET DETECTED!\n\nCHECKING AGAIN\nIN 10 SECS", 'red')
-            sleep(10)
+        # if IO.input(ir_pin) == 1:
+        if DEBUG == 2:
+            print("No pallet detected.")
+        if lcd_ctrl:
+            lcd_ctrl("NO PALLET DETECTED!\n\nCHECKING AGAIN\nIN 10 SECS", 'red')
+        sleep(10)
     if lcd_ctrl:
         lcd_ctrl("PALLET DETECTED\n\nCONTINUING", 'white')
         sleep(2)
