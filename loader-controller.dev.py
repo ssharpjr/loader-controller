@@ -14,8 +14,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -26,8 +26,10 @@
 # SOFTWARE.
 ###############################################################################
 
-# TODO: Pull PRESS_ID from /boot/pressid.txt and/or ENV VAR.
-# ####  This will allow for better replication to other presses.
+#       Periodically check if the captured work order is still current in RT.
+# TODO: Setup the Gaylord switch.
+# TODO: Pull PRESS_ID from /boot/pressid.txt. This will allow for better
+#       replication to other presses.
 
 
 import os
@@ -42,7 +44,7 @@ import RPi.GPIO as IO  # For standard GPIO methods.
 
 
 # CONSTANTS
-DEBUG = 2
+DEBUG = True
 PRESS_ID = '136'  # This does not change!
 
 
@@ -52,7 +54,7 @@ api_url = 'http://10.130.0.42'  # Web API URL
 
 # GPIO Setup
 rst_btn = 18  # INPUT - Manually restart the program.
-ir_pin = 23  # INPUT - Reads the IR sensor state.
+ir_pin  = 23  # INPUT - Reads the IR sensor state.
 ssr_pin = 24  # OUTPUT - Turns on the Solid State Relay.
 
 IO.setmode(IO.BCM)
@@ -123,8 +125,7 @@ def network_fail():
     if DEBUG:
         print("Failed to get data from API")
         print("System will restart in 10 seconds.")
-    lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\n \
-             Restarting...", 'red')
+    lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\nRestarting...", 'red')
     sleep(5)
     run_or_exit_program('run')
 
@@ -206,6 +207,7 @@ def wo_monitor(PRESS_ID, wo_id_from_wo):
     # Check if the workorder number changes (RT workorder unloaded).
     if DEBUG:
         print("Checking loaded workorder")
+    wo_id = wo_id_from_wo
     url = api_url + '/press/' + PRESS_ID
     resp = requests.get(url=url, timeout=10)
     data = json.loads(resp.text)
@@ -260,20 +262,18 @@ def sensor_monitor():
         run_or_exit_program('run')
     return
 
-
 def sensor_startup_check():
     # Check the pallet sensor on startup.
     # Keep checking until it is present.
     if DEBUG:
         print("Checking Pallet Sensor")
     while IO.input(ir_pin) == 1:
-        # if IO.input(ir_pin) == 1:
-        if DEBUG == 2:
-            print("No pallet detected.")
-        if lcd_ctrl:
-            lcd_ctrl("NO PALLET DETECTED!\n\nCHECKING AGAIN\nIN 10 SECS",
-                     'red')
-        sleep(10)
+        if IO.input(ir_pin) == 1:
+            if DEBUG == 2:
+                print("No pallet detected.")
+            if lcd_ctrl:
+                lcd_ctrl("NO PALLET DETECTED!\n\nCHECKING AGAIN\nIN 10 SECS", 'red')
+            sleep(10)
     if lcd_ctrl:
         lcd_ctrl("PALLET DETECTED\n\nCONTINUING", 'white')
         sleep(2)
@@ -309,7 +309,7 @@ def reboot_system():
 
 def run_or_exit_program(status):
     if status == 'run':
-        restart_program()
+       restart_program()
     elif status == 'exit':
         print("\nExiting")
         lcd.set_color(0, 0, 0)  # Turn off backlight
@@ -319,22 +319,22 @@ def run_or_exit_program(status):
 
 
 # Interrupt Callback function
-# def beam_cb(channel):
-#     if DEBUG:
-#         print("beam_cb() callback called")
-#     sleep(0.1)
-#     stop_loader()
-#     check_outlet_beam()
+def beam_cb(channel):
+    if DEBUG:
+        print("beam_cb() callback called")
+    sleep(0.1)
+    stop_loader()
+    check_outlet_beam()
 
 
-# def rst_btn_cb(channel):
-#     if DEBUG:
-#         print("rst_btn_cb() callback called")
-#     sleep(0.1)
-#     stop_loader()
-#     lcd_ctrl("RESETTING\nLOADER\nCONTROLLER", 'white')
-#     sleep(1)
-#     restart_program()
+def rst_btn_cb(channel):
+    if DEBUG:
+        print("rst_btn_cb() callback called")
+    sleep(0.1)
+    stop_loader()
+    lcd_ctrl("RESETTING\nLOADER\nCONTROLLER", 'white')
+    sleep(1)
+    restart_program()
 
 
 def run_mode(PRESS_ID, wo_id_from_wo):
@@ -375,9 +375,10 @@ def main():
     print()
     print("Starting Loader Controller Program")
     print("For Press " + PRESS_ID)
-    lcd_msg = "LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
+    lcd_msg ="LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
     lcd_ctrl(lcd_msg, 'white')
     sleep(2)
+
 
     # Check if the Pallet Sensor is open (a Pallet is present).
     sensor_startup_check()
@@ -386,6 +387,7 @@ def main():
     wo_id_from_wo = get_wo_scan()
     if DEBUG:
         print("Scanned Work Order: " + wo_id_from_wo)
+
 
     # Request Press Number and Raw Material Item Number from the API.
     if DEBUG:
@@ -396,9 +398,11 @@ def main():
     except:
         network_fail()
 
+
     if DEBUG:
         print("Press Number from API: " + press_from_api_wo)
         print("RM Item Number from API: " + rmat_from_api_wo)
+
 
     # Verify the Press Number.
     if DEBUG:
@@ -416,15 +420,18 @@ def main():
         sleep(2)  # Pause so the user can see the error.
         run_or_exit_program('run')
 
+
     # Scan the Raw Material Serial Number Barcode.
     serial_from_label = get_rmat_scan()
     if DEBUG:
         print("Serial Number from Label: " + serial_from_label)
 
+
     # Request Raw Material Item Number from the API.
     rmat_from_api_inv = serial_api_request(serial_from_label)
     if DEBUG:
-        print("RM Item Number from API: " + rmat_from_api_inv)
+      print("RM Item Number from API: " + rmat_from_api_inv)
+
 
     # Verify the Raw Material Item Number.
     if DEBUG:
@@ -435,8 +442,7 @@ def main():
             print("Starting the Loader!")
 
         start_loader()  # Looks good, turn on the loader.
-        lcd_msg = "PRESS: " + PRESS_ID + "\nWORKORDER: " + wo_id_from_wo + \
-                  "\n\nLOADER RUNNING"
+        lcd_msg = "PRESS: " + PRESS_ID + "\nWORKORDER: " + wo_id_from_wo + "\n\nLOADER RUNNING"
         lcd_ctrl(lcd_msg, 'green')
         run_mode(PRESS_ID, wo_id_from_wo)   # Start the monitors
     else:
@@ -453,12 +459,11 @@ def run():
             main()
         except KeyboardInterrupt:
             run_or_exit_program('exit')
-        except BaseException as e:
+        except:
             # stop_loader()
             if DEBUG:
-                print("\nrun() try failed\n")
-                print(e)
-                print("\nGPIO Cleanup")
+                print("main() try failed")
+                print("GPIO Cleanup")
             IO.cleanup()
 
 
