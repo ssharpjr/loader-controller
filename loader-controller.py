@@ -42,7 +42,7 @@ import RPi.GPIO as IO  # For standard GPIO methods.
 
 
 # CONSTANTS
-DEBUG = 2
+DEBUG = True
 PRESS_ID = '136'  # This does not change!
 
 
