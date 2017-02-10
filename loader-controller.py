@@ -459,11 +459,11 @@ def run():
             main()
         except KeyboardInterrupt:
             run_or_exit_program('exit')
-        except BaseException e:
+        except:
             # stop_loader()
             if DEBUG:
-                print(e)
-                print("main() try failed")
+                print(sys.exec_info()[0])
+                # print("main() try failed")
                 print("GPIO Cleanup")
             IO.cleanup()
 
