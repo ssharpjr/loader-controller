@@ -113,7 +113,7 @@ def lcd_ctrl(msg, color, clear=True):
         }
 
     c = colors.get(color)
-    lcd.set_color(c)
+    lcd.set_color(*c)
     lcd.message(msg)
 
 
