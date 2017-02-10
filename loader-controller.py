@@ -121,14 +121,16 @@ def network_fail():
     if DEBUG:
         print("Failed to get data from API")
         print("System will restart in 10 seconds.")
-    lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\n \
+    if lcd:
+        lcd_ctrl("NETWORK FAILURE\nIf this persists\ncontact TPI IT Dept.\n \
              Restarting...", 'red')
     sleep(5)
     run_or_exit_program('run')
 
 
 def get_wo_scan():
-    lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
+    if lcd:
+        lcd_ctrl("SCAN\n\nWORKORDER NUMBER", 'white')
     # wo_scan = '9934386'  # Should be 9934386 for test.
     wo_scan = input("Scan Workorder: ")
     # wo_scan = sys.stdin.readline().rstrip()
@@ -137,7 +139,8 @@ def get_wo_scan():
 
 def wo_api_request(wo_id):
     # Notify user of potential pause
-    lcd_ctrl("GETTING\nWORKORDER\nINFORMATION...", 'blue')
+    if lcd:
+        lcd_ctrl("GETTING\nWORKORDER\nINFORMATION...", 'blue')
 
     url = api_url + '/wo/' + wo_id
     resp = requests.get(url=url, timeout=10)
@@ -145,7 +148,8 @@ def wo_api_request(wo_id):
 
     try:
         if data['error']:
-            lcd_ctrl("INVALID WORKORDER!", 'red')
+            if lcd:
+                lcd_ctrl("INVALID WORKORDER!", 'red')
             if DEBUG:
                 print("Invalid Workorder!  (data = error)")
             sleep(2)  # Pause so the user can read the error.
@@ -162,7 +166,9 @@ def wo_api_request(wo_id):
 
 def serial_api_request(sn):
     # Notify user of the potential pause
-    lcd_ctrl("GETTING\nRAW MATERIAL\nSERIAL NUMBER\nINFORMATION...", 'blue')
+    if lcd:
+        lcd_ctrl("GETTING\nRAW MATERIAL\nSERIAL NUMBER\nINFORMATION...",
+                 'blue')
 
     url = api_url + '/serial/' + sn
     resp = requests.get(url=url, timeout=10)
@@ -170,7 +176,8 @@ def serial_api_request(sn):
 
     try:
         if data['error']:
-            lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
+            if lcd:
+                lcd_ctrl("INVALID SERIAL\nNUMBER!", 'red')
             if DEBUG:
                 print("Invalid Serial Number! (data = error)")
             sleep(2)  # Pause so the user can read the error.
@@ -188,10 +195,12 @@ def get_rmat_scan():
     # Get the Raw Material Serial Number.
     # Check for the "S" qualifier.
     # Strip the qualifier is present and return the serial number.
-    lcd_ctrl("SCAN\nRAW MATERIAL\nSERIAL NUMBER", 'white')
+    if lcd:
+        lcd_ctrl("SCAN\nRAW MATERIAL\nSERIAL NUMBER", 'white')
     rmat_scan = str(input("Scan Raw Material Serial Number: "))
     if not rmat_scan.startswith('S'):
-        lcd_ctrl("NOT A VALID\nSERIAL NUMBER!", 'red')
+        if lcd:
+            lcd_ctrl("NOT A VALID\nSERIAL NUMBER!", 'red')
         if DEBUG:
             print("Not a Serial Number! (missing \"S\" qualifier)")
         sleep(2)  # Pause so the user can read the error.
@@ -252,7 +261,7 @@ def sensor_monitor():
     if IO.input(ir_pin) == 1:
         if DEBUG:
             print("Sensor detected.  Pallet moved")
-        if lcd_ctrl:
+        if lcd:
             lcd_ctrl("NO PALLET DETECTED\n\nRESTARTING", 'red')
             sleep(2)
         run_or_exit_program('run')
@@ -268,11 +277,11 @@ def sensor_startup_check():
         # if IO.input(ir_pin) == 1:
         if DEBUG == 2:
             print("No pallet detected.")
-        if lcd_ctrl:
+        if lcd:
             lcd_ctrl("NO PALLET DETECTED!\n\nCHECKING AGAIN\nIN 10 SECS",
                      'red')
         sleep(10)
-    if lcd_ctrl:
+    if lcd:
         lcd_ctrl("PALLET DETECTED\n\nCONTINUING", 'white')
         sleep(2)
 
@@ -299,8 +308,9 @@ def restart_program():
 
 
 def reboot_system():
-    lcd.clear()
-    lcd_ctrl("REBOOTING SYSTEM\n\nSTANDBY...", 'blue')
+    if lcd:
+        lcd.clear()
+        lcd_ctrl("REBOOTING SYSTEM\n\nSTANDBY...", 'blue')
     IO.cleanup()
     os.system('sudo reboot')
 
@@ -373,8 +383,9 @@ def main():
     print()
     print("Starting Loader Controller Program")
     print("For Press " + PRESS_ID)
-    lcd_msg = "LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
-    lcd_ctrl(lcd_msg, 'white')
+    if lcd:
+        lcd_msg = "LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
+        lcd_ctrl(lcd_msg, 'white')
     sleep(2)
 
     # Check if the Pallet Sensor is open (a Pallet is present).
@@ -407,7 +418,8 @@ def main():
                   " is running on Press #" + PRESS_ID)
             print("Good Workorder.  Continuing...")
     else:
-        lcd_ctrl("INCORRECT\nWORKORDER!", 'red')
+        if lcd:
+            lcd_ctrl("INCORRECT\nWORKORDER!", 'red')
         if DEBUG:
             print("Incorrect Workorder!")
             print("This Workorder is for press: " + press_from_api_wo)
@@ -433,14 +445,16 @@ def main():
             print("Starting the Loader!")
 
         start_loader()  # Looks good, turn on the loader.
-        lcd_msg = "PRESS: " + PRESS_ID + "\nWORKORDER: " + wo_id_from_wo + \
-                  "\n\nLOADER RUNNING"
-        lcd_ctrl(lcd_msg, 'green')
+        if lcd:
+            lcd_msg = "PRESS: " + PRESS_ID + "\nWORKORDER: " + wo_id_from_wo +\
+                      "\n\nLOADER RUNNING"
+            lcd_ctrl(lcd_msg, 'green')
         run_mode(PRESS_ID, wo_id_from_wo)   # Start the monitors
     else:
         if DEBUG:
             print("Invalid Material!")
-        lcd_ctrl("INCORRECT\nMATERIAL!", 'red')
+        if lcd:
+            lcd_ctrl("INCORRECT\nMATERIAL!", 'red')
         sleep(2)  # Pause so the user can see the error.
         run_or_exit_program('run')
 
