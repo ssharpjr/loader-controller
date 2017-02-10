@@ -101,22 +101,31 @@ def lcd_ctrl(msg, color, clear=True):
     # Send instructions to the LCD.
     # Colors are Red, Green, Blue values.
     # all zeros equals off, all ones equals white
-    color = color
-    if clear:
-        lcd.clear()
-    if color == 'red':
-        lcd.set_color(1.0, 0.0, 0.0)  # Red
-    elif color == 'green':
-        lcd.set_color(0.0, 1.0, 0.0)  # Green
-    elif color == 'blue':
-        lcd.set_color(0.0, 0.0, 1.0)  # Blue
-    elif color == 'white':
-        lcd.set_color(1.0, 1.0, 1.0)  # White
-    elif color == 'off':
-        lcd.set_color(0.0, 0.0, 0.0)  # Off
-    else:
-        lcd.set_color(0.0, 0.0, 0.0)  # Off
+    colors = {
+        'red': (1.0, 0.0, 0.0),
+        'green': (0.0, 1.0, 0.0),
+        'blue': (0.0, 0.0, 1.0),
+        'white': (1.0, 1.0, 1.0),
+        'off': (0.0, 0.0, 0.0)
+        }
+    c = colors.get(color)
+    lcd.set_color(c)
     lcd.message(msg)
+
+    # if clear:
+    #     lcd.clear()
+    # if color == 'red':
+    #     lcd.set_color(1.0, 0.0, 0.0)  # Red
+    # elif color == 'green':
+    #     lcd.set_color(0.0, 1.0, 0.0)  # Green
+    # elif color == 'blue':
+    #     lcd.set_color(0.0, 0.0, 1.0)  # Blue
+    # elif color == 'white':
+    #     lcd.set_color(1.0, 1.0, 1.0)  # White
+    # elif color == 'off':
+    #     lcd.set_color(0.0, 0.0, 0.0)  # Off
+    # else:
+    #     lcd.set_color(0.0, 0.0, 0.0)  # Off
 
 
 def network_fail():
