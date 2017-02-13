@@ -26,9 +26,6 @@
 # SOFTWARE.
 ###############################################################################
 
-# TODO: Pull PRESS_ID from /boot/pressid.txt and/or ENV VAR.
-# ####  This will allow for better replication to other presses.
-
 
 import os
 import sys
@@ -41,13 +38,8 @@ import Adafruit_GPIO.MCP230xx as MCP
 import RPi.GPIO as IO  # For standard GPIO methods.
 
 
-# CONSTANTS
-DEBUG = True
-PRESS_ID = '136'  # This does not change!
-
-
 # Variables
-# api_url = 'http://192.168.11.216:5000'
+DEBUG = True
 api_url = 'http://10.130.0.42'  # Web API URL
 
 # GPIO Setup
@@ -115,6 +107,26 @@ def lcd_ctrl(msg, color, clear=True):
     c = colors.get(color)
     lcd.set_color(*c)
     lcd.message(msg)
+
+
+def get_press_id():
+    # Get PRESS_ID from /boot/PRESS_ID file
+    # Close the program if no PRESS_ID is found
+    press_id_file = "/boot/PRESS_ID"
+    try:
+        with open(press_id_file) as f:
+            PRESS_ID = f.read()
+            if PRESS_ID is not None:
+                return PRESS_ID
+            else:
+                raise ValueError("PRESS_ID is None!")
+            run_or_exit_program('exit')
+    except IOError:
+        print(press_id_file + " Not Found!")
+        run_or_exit_program('exit')
+    except BaseException as e:
+        print(e)
+        run_or_exit_program('exit')
 
 
 def network_fail():
@@ -380,8 +392,10 @@ def run_mode(PRESS_ID, wo_id_from_wo):
 ###############################################################################
 
 def main():
-    print()
-    print("Starting Loader Controller Program")
+    # Get the PRESS_ID before doing anything else
+    PRESS_ID = get_press_id()
+
+    print("\nStarting Loader Controller Program")
     print("For Press " + PRESS_ID)
     if lcd:
         lcd_msg = "LOADER CONTROLLER\n\n\nPRESS " + PRESS_ID
