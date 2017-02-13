@@ -115,12 +115,12 @@ def get_press_id():
     press_id_file = "/boot/PRESS_ID"
     try:
         with open(press_id_file) as f:
-            PRESS_ID = f.read()
+            PRESS_ID = f.read().replace('\n', '')
             if PRESS_ID is not None:
                 return PRESS_ID
             else:
                 raise ValueError("PRESS_ID is None!")
-            run_or_exit_program('exit')
+                run_or_exit_program('exit')
     except IOError:
         print(press_id_file + " Not Found!")
         run_or_exit_program('exit')
