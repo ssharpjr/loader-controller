@@ -116,17 +116,17 @@ def get_press_id():
     try:
         with open(press_id_file) as f:
             PRESS_ID = f.read().replace('\n', '')
-            if PRESS_ID is not None:
+            if len(PRESS_ID) >= 3:
                 return PRESS_ID
             else:
-                raise ValueError("PRESS_ID is None!")
-                run_or_exit_program('exit')
+                raise ValueError("PRESS_ID is Not Assigned!\nExiting")
+                sys.exit()
     except IOError:
-        print(press_id_file + " Not Found!")
-        run_or_exit_program('exit')
+        print(press_id_file + " Not Found!\nExiting")
+        sys.exit()
     except BaseException as e:
         print(e)
-        run_or_exit_program('exit')
+        sys.exit()
 
 
 def network_fail():
@@ -478,14 +478,12 @@ def run():
         try:
             main()
         except KeyboardInterrupt:
-            run_or_exit_program('exit')
-        except BaseException as e:
-            # stop_loader()
-            if DEBUG:
-                print("\nrun() try failed\n")
-                print(e)
-                print("\nGPIO Cleanup")
             IO.cleanup()
+            sys.exit()
+        except BaseException as e:
+            print(e)
+            IO.cleanup()
+            sys.exit()
 
 
 if __name__ == '__main__':
