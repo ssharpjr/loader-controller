@@ -478,13 +478,10 @@ def run():
         try:
             main()
         except KeyboardInterrupt:
-            IO.cleanup()
-            sys.exit()
+            run_or_exit_program('exit')
         except BaseException as e:
             print(e)
-            IO.cleanup()
-            sys.exit()
-
+            run_or_exit_program('exit')
 
 if __name__ == '__main__':
     run()
